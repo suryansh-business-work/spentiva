@@ -11,6 +11,7 @@ Versions follow [Semantic Versioning](https://semver.org) from Conventional Comm
 
 | Version | Channel | Built | Commit | Files |
 |---|---|---|---|---|
+| 1.1.0 | staging | 2026-09-11 | `ece659a` | [AAB](staging/v1.1.0/Spentiva-v1.1.0-staging.aab) (39.72 MB) · [APK](staging/v1.1.0/Spentiva-v1.1.0-staging.apk) (49.95 MB) · [IPA](staging/v1.1.0/Spentiva-v1.1.0-staging.ipa) (10.77 MB) |
 | 1.0.3 | staging | 2026-09-11 | `614585d` | [AAB](staging/v1.0.3/Spentiva-v1.0.3-staging.aab) (39.7 MB) · [APK](staging/v1.0.3/Spentiva-v1.0.3-staging.apk) (49.88 MB) · [IPA](staging/v1.0.3/Spentiva-v1.0.3-staging.ipa) (10.74 MB) |
 | 1.0.2 | staging | 2026-09-11 | `b7785f1` | [AAB](staging/v1.0.2/Spentiva-v1.0.2-staging.aab) (39.7 MB) · [APK](staging/v1.0.2/Spentiva-v1.0.2-staging.apk) (49.93 MB) · [IPA](staging/v1.0.2/Spentiva-v1.0.2-staging.ipa) (10.75 MB) |
 | 1.0.1 | staging | 2026-09-11 | `e6752f5` | [AAB](staging/v1.0.1/Spentiva-v1.0.1-staging.aab) (39.7 MB) · [APK](staging/v1.0.1/Spentiva-v1.0.1-staging.apk) (49.93 MB) · [IPA](staging/v1.0.1/Spentiva-v1.0.1-staging.ipa) (10.75 MB) |
