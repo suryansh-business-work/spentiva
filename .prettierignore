@@ -1,0 +1,11 @@
+node_modules
+dist
+builds
+artifacts
+package-lock.json
+mobile/android
+mobile/ios
+mobile/.expo
+mobile/.tamagui
+mobile/src/components/chart/chartjs.generated.ts
+*.png

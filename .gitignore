@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+*.pem
+google-service-account*.json
+
+# build output (release binaries live in builds/, managed by CI)
+dist/
+backend/dist/
+mobile/android/
+mobile/ios/
+mobile/.expo/
+mobile/.expo-export-check/
+mobile/build-ios/
+mobile/expo-env.d.ts
+artifacts/
+
+# misc
+.DS_Store
+*.log
+*.tsbuildinfo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Tamagui compiler cache
+mobile/.tamagui/
