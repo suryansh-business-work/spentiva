@@ -1,13 +1,13 @@
 {
   "staging": {
-    "version": "1.0.2",
-    "versionCode": 1000002,
-    "builtAt": "2026-09-11T10:57:15.951Z",
-    "dir": "staging/v1.0.2",
+    "version": "1.0.3",
+    "versionCode": 1000003,
+    "builtAt": "2026-09-11T11:18:02.318Z",
+    "dir": "staging/v1.0.3",
     "files": [
-      "Spentiva-v1.0.2-staging.aab",
-      "Spentiva-v1.0.2-staging.apk",
-      "Spentiva-v1.0.2-staging.ipa"
+      "Spentiva-v1.0.3-staging.aab",
+      "Spentiva-v1.0.3-staging.apk",
+      "Spentiva-v1.0.3-staging.ipa"
     ]
   }
 }
