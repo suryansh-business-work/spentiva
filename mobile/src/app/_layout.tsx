@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -9,8 +9,11 @@ import { TamaguiProvider } from 'tamagui';
 import { config } from '../../tamagui.config';
 import { ConfirmProvider } from '@/components/ConfirmDialog';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { setCurrentRoute } from '@/lib/crash';
 import { logError } from '@/lib/log';
 import { C } from '@/theme/colors';
+
+export { CrashScreen as ErrorBoundary } from '@/components/CrashScreen';
 
 SplashScreen.preventAutoHideAsync().catch(logError('splash'));
 
@@ -20,10 +23,15 @@ const queryClient = new QueryClient({
 
 function RootNavigator() {
   const { status } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status !== 'loading') SplashScreen.hideAsync().catch(logError('splash'));
   }, [status]);
+
+  useEffect(() => {
+    setCurrentRoute(pathname);
+  }, [pathname]);
 
   if (status === 'loading') return null;
   const signedIn = status === 'signedIn';

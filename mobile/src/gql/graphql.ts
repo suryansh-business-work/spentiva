@@ -24,6 +24,23 @@ export type ChatKind = 'ERROR' | 'OPTIONS' | 'REPORT' | 'TEXT' | 'TRANSACTION';
 
 export type ChatRole = 'ASSISTANT' | 'USER';
 
+export type ClientLogInput = {
+  apiUrl?: string | null | undefined;
+  appVersion?: string | null | undefined;
+  buildNumber?: string | null | undefined;
+  context?: string | null | undefined;
+  device?: string | null | undefined;
+  level: LogLevel;
+  message: string;
+  occurredAt?: string | null | undefined;
+  osVersion?: string | null | undefined;
+  platform?: string | null | undefined;
+  /** APP or PORTAL */
+  source: LogSource;
+  stack?: string | null | undefined;
+  url?: string | null | undefined;
+};
+
 export type EnvSource = 'APP' | 'NONE' | 'SERVER_ENV';
 
 export type EnvVarInput = {
@@ -31,6 +48,10 @@ export type EnvVarInput = {
   /** Empty or null clears the value */
   value?: string | null | undefined;
 };
+
+export type LogLevel = 'ERROR' | 'FATAL' | 'INFO' | 'WARN';
+
+export type LogSource = 'API' | 'APP' | 'PORTAL';
 
 export type LoginInput = {
   email: string;
@@ -91,6 +112,18 @@ export type SignupInput = {
 };
 
 export type StatFormat = 'CURRENCY' | 'NUMBER' | 'PERCENT';
+
+export type TicketAuthor = 'ADMIN' | 'USER';
+
+export type TicketCategory = 'ACCOUNT' | 'BUG' | 'FEEDBACK' | 'OTHER' | 'QUESTION';
+
+export type TicketInput = {
+  category: TicketCategory;
+  message: string;
+  subject: string;
+};
+
+export type TicketStatus = 'CLOSED' | 'IN_PROGRESS' | 'OPEN' | 'RESOLVED';
 
 export type TransactionFilter = {
   categoryId?: string | number | null | undefined;
@@ -787,6 +820,109 @@ export type OpenAiModelsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type OpenAiModelsQuery = { openAiModels: Array<string> };
 
+export type TicketFieldsFragment = {
+  id: string;
+  subject: string;
+  category: TicketCategory;
+  status: TicketStatus;
+  messageCount: number;
+  lastAuthor: TicketAuthor;
+  lastMessageAt: string;
+  createdAt: string;
+  messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+};
+
+export type MySupportTicketsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type MySupportTicketsQuery = {
+  mySupportTickets: Array<{
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  }>;
+};
+
+export type SupportTicketQueryVariables = Exact<{
+  id: string | number;
+}>;
+
+export type SupportTicketQuery = {
+  supportTicket: {
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  } | null;
+};
+
+export type CreateSupportTicketMutationVariables = Exact<{
+  input: TicketInput;
+}>;
+
+export type CreateSupportTicketMutation = {
+  createSupportTicket: {
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  };
+};
+
+export type ReplySupportTicketMutationVariables = Exact<{
+  id: string | number;
+  body: string;
+}>;
+
+export type ReplySupportTicketMutation = {
+  replySupportTicket: {
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  };
+};
+
+export type ValidationRulesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type ValidationRulesQuery = {
+  validationRules: {
+    nameMax: number;
+    passwordMin: number;
+    passwordMax: number;
+    ticketSubjectMin: number;
+    ticketSubjectMax: number;
+    ticketMessageMin: number;
+    ticketMessageMax: number;
+  };
+};
+
+export type ReportLogsMutationVariables = Exact<{
+  input: Array<ClientLogInput> | ClientLogInput;
+}>;
+
+export type ReportLogsMutation = { reportLogs: number };
+
 export class TypedDocumentString<TResult, TVariables> extends String implements DocumentTypeDecoration<TResult, TVariables> {
   __apiType?: NonNullable<DocumentTypeDecoration<TResult, TVariables>['__apiType']>;
   private value: string;
@@ -992,6 +1128,28 @@ export const EnvFieldsFragmentDoc = new TypedDocumentString(
     `,
   { fragmentName: 'EnvFields' },
 ) as unknown as TypedDocumentString<EnvFieldsFragment, unknown>;
+export const TicketFieldsFragmentDoc = new TypedDocumentString(
+  `
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}
+    `,
+  { fragmentName: 'TicketFields' },
+) as unknown as TypedDocumentString<TicketFieldsFragment, unknown>;
 export const SignupDocument = new TypedDocumentString(`
     mutation Signup($input: SignupInput!) {
   signup(input: $input) {
@@ -1719,3 +1877,113 @@ export const OpenAiModelsDocument = new TypedDocumentString(`
   openAiModels
 }
     `) as unknown as TypedDocumentString<OpenAiModelsQuery, OpenAiModelsQueryVariables>;
+export const MySupportTicketsDocument = new TypedDocumentString(`
+    query MySupportTickets {
+  mySupportTickets {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<MySupportTicketsQuery, MySupportTicketsQueryVariables>;
+export const SupportTicketDocument = new TypedDocumentString(`
+    query SupportTicket($id: ID!) {
+  supportTicket(id: $id) {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<SupportTicketQuery, SupportTicketQueryVariables>;
+export const CreateSupportTicketDocument = new TypedDocumentString(`
+    mutation CreateSupportTicket($input: TicketInput!) {
+  createSupportTicket(input: $input) {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<CreateSupportTicketMutation, CreateSupportTicketMutationVariables>;
+export const ReplySupportTicketDocument = new TypedDocumentString(`
+    mutation ReplySupportTicket($id: ID!, $body: String!) {
+  replySupportTicket(id: $id, body: $body) {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<ReplySupportTicketMutation, ReplySupportTicketMutationVariables>;
+export const ValidationRulesDocument = new TypedDocumentString(`
+    query ValidationRules {
+  validationRules {
+    nameMax
+    passwordMin
+    passwordMax
+    ticketSubjectMin
+    ticketSubjectMax
+    ticketMessageMin
+    ticketMessageMax
+  }
+}
+    `) as unknown as TypedDocumentString<ValidationRulesQuery, ValidationRulesQueryVariables>;
+export const ReportLogsDocument = new TypedDocumentString(`
+    mutation ReportLogs($input: [ClientLogInput!]!) {
+  reportLogs(input: $input)
+}
+    `) as unknown as TypedDocumentString<ReportLogsMutation, ReportLogsMutationVariables>;

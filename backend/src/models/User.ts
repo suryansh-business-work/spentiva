@@ -14,6 +14,12 @@ const UserSchema = new Schema(
     monthlyBudget: { type: Number, default: null },
     /** ADMIN can edit the app-wide Environment settings (OpenAI, Slack). First user is ADMIN. */
     role: { type: String, enum: ['USER', 'ADMIN'], default: 'USER' },
+    /** Blocked by an admin (portal): can't log in and existing sessions are rejected */
+    disabled: { type: Boolean, default: false },
+    /** Last app request (throttled) + the app build it came from, for the portal's user list */
+    lastSeenAt: { type: Date, default: null },
+    appVersion: { type: String, default: null },
+    platform: { type: String, default: null },
   },
   { timestamps: true },
 );

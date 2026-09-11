@@ -13,6 +13,9 @@ export const keys = {
   env: ['env'] as const,
   slack: ['slackChannels'] as const,
   models: ['openAiModels'] as const,
+  rules: ['validationRules'] as const,
+  tickets: ['supportTickets'] as const,
+  ticket: (id: string) => ['supportTicket', id] as const,
 };
 
 /** Anything that changes money totals refreshes these */

@@ -43,6 +43,7 @@ export const authResolvers = {
       const data = validate(LoginZ, input);
       const user = await User.findOne({ email: data.email });
       if (!user || !(await verifyPassword(data.password, user.passwordHash))) throw badInput('Incorrect email or password');
+      if (user.disabled) throw badInput('This account has been disabled. Please contact support.');
       if (user.role !== 'ADMIN' && adminEmails().has(user.email)) {
         user.role = 'ADMIN';
         await user.save();

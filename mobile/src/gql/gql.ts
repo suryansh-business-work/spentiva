@@ -55,6 +55,13 @@ type Documents = {
   '\n  query EnvVars {\n    envVars {\n      ...EnvFields\n    }\n  }\n': typeof types.EnvVarsDocument;
   '\n  query SlackChannels {\n    slackChannels {\n      id\n      name\n      isPrivate\n      isMember\n    }\n  }\n': typeof types.SlackChannelsDocument;
   '\n  query OpenAiModels {\n    openAiModels\n  }\n': typeof types.OpenAiModelsDocument;
+  '\n  fragment TicketFields on SupportTicket {\n    id\n    subject\n    category\n    status\n    messageCount\n    lastAuthor\n    lastMessageAt\n    createdAt\n    messages {\n      id\n      author\n      authorName\n      body\n      createdAt\n    }\n  }\n': typeof types.TicketFieldsFragmentDoc;
+  '\n  query MySupportTickets {\n    mySupportTickets {\n      ...TicketFields\n    }\n  }\n': typeof types.MySupportTicketsDocument;
+  '\n  query SupportTicket($id: ID!) {\n    supportTicket(id: $id) {\n      ...TicketFields\n    }\n  }\n': typeof types.SupportTicketDocument;
+  '\n  mutation CreateSupportTicket($input: TicketInput!) {\n    createSupportTicket(input: $input) {\n      ...TicketFields\n    }\n  }\n': typeof types.CreateSupportTicketDocument;
+  '\n  mutation ReplySupportTicket($id: ID!, $body: String!) {\n    replySupportTicket(id: $id, body: $body) {\n      ...TicketFields\n    }\n  }\n': typeof types.ReplySupportTicketDocument;
+  '\n  query ValidationRules {\n    validationRules {\n      nameMax\n      passwordMin\n      passwordMax\n      ticketSubjectMin\n      ticketSubjectMax\n      ticketMessageMin\n      ticketMessageMax\n    }\n  }\n': typeof types.ValidationRulesDocument;
+  '\n  mutation ReportLogs($input: [ClientLogInput!]!) {\n    reportLogs(input: $input)\n  }\n': typeof types.ReportLogsDocument;
 };
 const documents: Documents = {
   '\n  fragment UserFields on User {\n    id\n    name\n    email\n    currency\n    timezone\n    locale\n    monthlyBudget\n    isAdmin\n    createdAt\n  }\n':
@@ -123,6 +130,17 @@ const documents: Documents = {
   '\n  query EnvVars {\n    envVars {\n      ...EnvFields\n    }\n  }\n': types.EnvVarsDocument,
   '\n  query SlackChannels {\n    slackChannels {\n      id\n      name\n      isPrivate\n      isMember\n    }\n  }\n': types.SlackChannelsDocument,
   '\n  query OpenAiModels {\n    openAiModels\n  }\n': types.OpenAiModelsDocument,
+  '\n  fragment TicketFields on SupportTicket {\n    id\n    subject\n    category\n    status\n    messageCount\n    lastAuthor\n    lastMessageAt\n    createdAt\n    messages {\n      id\n      author\n      authorName\n      body\n      createdAt\n    }\n  }\n':
+    types.TicketFieldsFragmentDoc,
+  '\n  query MySupportTickets {\n    mySupportTickets {\n      ...TicketFields\n    }\n  }\n': types.MySupportTicketsDocument,
+  '\n  query SupportTicket($id: ID!) {\n    supportTicket(id: $id) {\n      ...TicketFields\n    }\n  }\n': types.SupportTicketDocument,
+  '\n  mutation CreateSupportTicket($input: TicketInput!) {\n    createSupportTicket(input: $input) {\n      ...TicketFields\n    }\n  }\n':
+    types.CreateSupportTicketDocument,
+  '\n  mutation ReplySupportTicket($id: ID!, $body: String!) {\n    replySupportTicket(id: $id, body: $body) {\n      ...TicketFields\n    }\n  }\n':
+    types.ReplySupportTicketDocument,
+  '\n  query ValidationRules {\n    validationRules {\n      nameMax\n      passwordMin\n      passwordMax\n      ticketSubjectMin\n      ticketSubjectMax\n      ticketMessageMin\n      ticketMessageMax\n    }\n  }\n':
+    types.ValidationRulesDocument,
+  '\n  mutation ReportLogs($input: [ClientLogInput!]!) {\n    reportLogs(input: $input)\n  }\n': types.ReportLogsDocument,
 };
 
 /**
@@ -365,6 +383,48 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: '\n  query OpenAiModels {\n    openAiModels\n  }\n'): typeof import('./graphql').OpenAiModelsDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment TicketFields on SupportTicket {\n    id\n    subject\n    category\n    status\n    messageCount\n    lastAuthor\n    lastMessageAt\n    createdAt\n    messages {\n      id\n      author\n      authorName\n      body\n      createdAt\n    }\n  }\n',
+): typeof import('./graphql').TicketFieldsFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query MySupportTickets {\n    mySupportTickets {\n      ...TicketFields\n    }\n  }\n',
+): typeof import('./graphql').MySupportTicketsDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query SupportTicket($id: ID!) {\n    supportTicket(id: $id) {\n      ...TicketFields\n    }\n  }\n',
+): typeof import('./graphql').SupportTicketDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateSupportTicket($input: TicketInput!) {\n    createSupportTicket(input: $input) {\n      ...TicketFields\n    }\n  }\n',
+): typeof import('./graphql').CreateSupportTicketDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ReplySupportTicket($id: ID!, $body: String!) {\n    replySupportTicket(id: $id, body: $body) {\n      ...TicketFields\n    }\n  }\n',
+): typeof import('./graphql').ReplySupportTicketDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ValidationRules {\n    validationRules {\n      nameMax\n      passwordMin\n      passwordMax\n      ticketSubjectMin\n      ticketSubjectMax\n      ticketMessageMin\n      ticketMessageMax\n    }\n  }\n',
+): typeof import('./graphql').ValidationRulesDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ReportLogs($input: [ClientLogInput!]!) {\n    reportLogs(input: $input)\n  }\n',
+): typeof import('./graphql').ReportLogsDocument;
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

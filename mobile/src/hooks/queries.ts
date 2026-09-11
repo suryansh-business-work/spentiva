@@ -13,6 +13,7 @@ import {
   TransactionQuery,
   TransactionsQuery,
 } from '@/graphql/queries';
+import { MyTicketsQuery, TicketQuery, ValidationRulesQuery } from '@/graphql/support';
 import { gql } from '@/lib/api';
 import type { ChatMessage, ReportInput, TransactionFilter } from '@/lib/types';
 import { keys } from './keys';
@@ -65,3 +66,12 @@ export const useSlackChannels = (enabled: boolean) =>
 
 export const useOpenAiModels = (enabled: boolean) =>
   useQuery({ queryKey: keys.models, queryFn: () => gql(OpenAiModelsQuery).then((d) => d.openAiModels), enabled, staleTime: FIVE_MINUTES * 2 });
+
+/** Form limits from the API, so forms validate exactly like the server */
+export const useValidationRules = () =>
+  useQuery({ queryKey: keys.rules, queryFn: () => gql(ValidationRulesQuery).then((d) => d.validationRules), staleTime: Infinity });
+
+export const useMyTickets = () => useQuery({ queryKey: keys.tickets, queryFn: () => gql(MyTicketsQuery).then((d) => d.mySupportTickets) });
+
+export const useTicket = (id: string) =>
+  useQuery({ queryKey: keys.ticket(id), queryFn: () => gql(TicketQuery, { id }).then((d) => d.supportTicket), enabled: !!id });

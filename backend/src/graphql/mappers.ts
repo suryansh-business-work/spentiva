@@ -3,6 +3,10 @@ import type { CategoryDoc } from '../models/Category.js';
 import type { PaymentSourceDoc } from '../models/PaymentSource.js';
 import type { TransactionDoc } from '../models/Transaction.js';
 import type { ChatMessageDoc } from '../models/ChatMessage.js';
+import type { AppLogDoc } from '../models/AppLog.js';
+import type { SupportTicketDoc } from '../models/SupportTicket.js';
+import type { TicketUser } from '../services/support.js';
+import type { UserCounts } from '../services/users.js';
 
 const idOrNull = (v: unknown) => (v ? String(v) : null);
 
@@ -70,3 +74,63 @@ export const toChatMessage = (m: ChatMessageDoc, tx?: TransactionDoc | null) => 
 });
 
 export type ChatMessageOut = ReturnType<typeof toChatMessage>;
+
+export const toLog = (l: AppLogDoc) => ({
+  id: l.id as string,
+  level: l.level,
+  source: l.source,
+  message: l.message,
+  stack: l.stack ?? null,
+  url: l.url ?? null,
+  userId: idOrNull(l.userId),
+  userEmail: l.userEmail ?? null,
+  appVersion: l.appVersion ?? null,
+  buildNumber: l.buildNumber ?? null,
+  platform: l.platform ?? null,
+  osVersion: l.osVersion ?? null,
+  device: l.device ?? null,
+  apiUrl: l.apiUrl ?? null,
+  context: l.context ?? null,
+  ip: l.ip ?? null,
+  userAgent: l.userAgent ?? null,
+  fingerprint: l.fingerprint,
+  occurredAt: l.occurredAt,
+  createdAt: l.createdAt,
+  resolved: l.resolved,
+  resolvedAt: l.resolvedAt ?? null,
+});
+
+export const toTicket = (t: SupportTicketDoc, user: TicketUser | null = null) => ({
+  id: t.id as string,
+  subject: t.subject,
+  category: t.category,
+  status: t.status,
+  priority: t.priority,
+  messages: t.messages.map((m) => ({ id: String(m._id), author: m.author, authorName: m.authorName, body: m.body, createdAt: m.createdAt })),
+  messageCount: t.messages.length,
+  lastAuthor: t.messages.at(-1)?.author ?? 'USER',
+  user,
+  appVersion: t.appVersion ?? null,
+  platform: t.platform ?? null,
+  lastMessageAt: t.lastMessageAt,
+  createdAt: t.createdAt,
+  updatedAt: t.updatedAt,
+});
+
+export const toAdminUser = (u: UserDoc, counts: UserCounts) => ({
+  id: u.id as string,
+  name: u.name,
+  email: u.email,
+  role: u.role,
+  disabled: u.disabled,
+  currency: u.currency,
+  timezone: u.timezone,
+  locale: u.locale,
+  appVersion: u.appVersion ?? null,
+  platform: u.platform ?? null,
+  lastSeenAt: u.lastSeenAt ?? null,
+  createdAt: u.createdAt,
+  transactionCount: counts.transactions.get(u.id as string) ?? 0,
+  errorCount: counts.errors.get(u.id as string) ?? 0,
+  ticketCount: counts.tickets.get(u.id as string) ?? 0,
+});

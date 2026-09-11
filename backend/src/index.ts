@@ -5,8 +5,13 @@ import { env, isProd } from './config/env.js';
 import { connectDb, disconnectDb } from './db.js';
 import { createContext, type Context } from './graphql/context.js';
 import { resolvers } from './graphql/resolvers/index.js';
+import { commonTypeDefs } from './graphql/schema/common.js';
+import { logTypeDefs } from './graphql/schema/logs.js';
+import { supportTypeDefs } from './graphql/schema/support.js';
+import { userTypeDefs } from './graphql/schema/users.js';
 import { typeDefs } from './graphql/typeDefs.js';
 import { getSetting } from './services/appSettings.js';
+import { recordServerError } from './services/logs.js';
 
 function authorizedCi(header: string | null): boolean {
   const expected = process.env.CI_TOKEN;
@@ -24,7 +29,7 @@ const httpRoutes: Plugin = {
     const json = (body: unknown, status = 200) =>
       endResponse(new fetchAPI.Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
     if (url.pathname === '/' || url.pathname === '/healthz') {
-      json({ name: 'spentiva-api', status: 'ok', graphql: '/graphql' });
+      json({ name: 'spentiva-api', status: 'ok', version: process.env.APP_VERSION ?? null, graphql: '/graphql' });
       return;
     }
     if (url.pathname !== '/ci/config') return;
@@ -42,7 +47,7 @@ const httpRoutes: Plugin = {
 };
 
 const yoga = createYoga({
-  schema: createSchema<Context>({ typeDefs, resolvers }),
+  schema: createSchema<Context>({ typeDefs: [typeDefs, commonTypeDefs, logTypeDefs, supportTypeDefs, userTypeDefs], resolvers }),
   context: createContext,
   graphqlEndpoint: '/graphql',
   graphiql: !isProd,
@@ -62,6 +67,11 @@ async function shutdown(signal: string) {
   await disconnectDb();
   process.exit(0);
 }
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection', reason);
+  recordServerError(reason, 'process · unhandledRejection', null, null);
+});
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {

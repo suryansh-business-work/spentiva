@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { FiCpu, FiCreditCard, FiGrid, FiLock, FiLogOut, FiServer, FiSliders } from 'react-icons/fi';
+import { FiCpu, FiCreditCard, FiGrid, FiLifeBuoy, FiLock, FiLogOut, FiServer, FiSliders } from 'react-icons/fi';
 import { Text, XStack, YStack } from 'tamagui';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { Card, Divider, ListRow, Muted, Screen, Tiny, Title } from '@/components/ui';
@@ -94,6 +94,14 @@ export default function ProfileScreen() {
           />
         </Card>
       ) : null}
+      <Card gap={0} paddingVertical={6}>
+        <ListRow
+          icon={FiLifeBuoy}
+          title="Help & support"
+          subtitle="Report a problem or ask a question"
+          onPress={() => router.push('/settings/support')}
+        />
+      </Card>
       <Card gap={0} paddingVertical={6}>
         <ListRow icon={FiLock} iconColor={C.sub} title="Change password" onPress={() => router.push('/settings/password')} />
         <Divider />

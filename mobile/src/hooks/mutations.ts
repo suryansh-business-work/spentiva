@@ -19,6 +19,7 @@ import {
   UpdateSourceMutation,
   UpdateTxMutation,
 } from '@/graphql/mutations';
+import { CreateTicketMutation, ReplyTicketMutation } from '@/graphql/support';
 import { gql } from '@/lib/api';
 import type { TransactionInput, User } from '@/lib/types';
 import { keys, useInvalidateMoney } from './keys';
@@ -58,6 +59,8 @@ export const useUpdateSource = () => useGqlMutation(UpdateSourceMutation, [keys.
 export const useDeleteSource = () => useGqlMutation(DeleteSourceMutation, [keys.sources]);
 
 export const useChangePassword = () => useGqlMutation(ChangePasswordMutation);
+export const useCreateTicket = () => useGqlMutation(CreateTicketMutation, [keys.tickets]);
+export const useReplyTicket = () => useGqlMutation(ReplyTicketMutation, [keys.tickets, ['supportTicket']]);
 export const useSaveEnvVars = () => useGqlMutation(SetEnvVarsMutation, [keys.env, keys.slack, keys.models]);
 export const useTestSlack = () => useGqlMutation(TestSlackMutation);
 export const useTestOpenAi = () => useGqlMutation(TestOpenAiMutation);

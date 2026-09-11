@@ -1,8 +1,8 @@
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import type { IconType } from 'react-icons';
 import { XStack, YStack } from 'tamagui';
-import { FieldHelp, FieldLabel } from '@/components/form';
-import { Chip } from '@/components/ui';
+import { FieldHelp, FieldLabel } from './FieldText';
+import { Chip } from '../ui';
 
 export interface ChipItem {
   value: string;

@@ -2,7 +2,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 
 /** Typed GraphQL operations generated from the backend schema → src/gql (run `npm run codegen`) */
 const config: CodegenConfig = {
-  schema: '../backend/src/graphql/typeDefs.ts',
+  schema: ['../backend/src/graphql/typeDefs.ts', '../backend/src/graphql/schema/*.ts'],
   documents: ['src/graphql/**/*.ts'],
   ignoreNoDocuments: false,
   generates: {

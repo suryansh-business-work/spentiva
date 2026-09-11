@@ -1,4 +1,4 @@
-import type { Period, ReportKind } from './types';
+import type { Period, ReportKind, TicketCategory, TicketStatus } from './types';
 
 /** UI configuration (labels & palettes). Business data comes from the API. */
 
@@ -46,3 +46,19 @@ export const TX_TYPE_OPTIONS = [
   { value: 'EXPENSE' as const, label: 'Expense' },
   { value: 'INCOME' as const, label: 'Income' },
 ];
+
+/** Help & support (values come from the API's TicketCategory / TicketStatus enums) */
+export const TICKET_CATEGORY_OPTIONS: { value: TicketCategory; label: string }[] = [
+  { value: 'BUG', label: 'Bug / crash' },
+  { value: 'QUESTION', label: 'Question' },
+  { value: 'FEEDBACK', label: 'Feedback' },
+  { value: 'ACCOUNT', label: 'Account' },
+  { value: 'OTHER', label: 'Other' },
+];
+
+export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
+  OPEN: 'Open',
+  IN_PROGRESS: 'In progress',
+  RESOLVED: 'Resolved',
+  CLOSED: 'Closed',
+};

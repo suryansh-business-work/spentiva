@@ -11,7 +11,9 @@ on:
       - 'builds/**'
       - '**/*.md'
       - 'backend/**'
+      - 'portal/**'
       - '.github/workflows/deploy-backend.yml'
+      - '.github/workflows/deploy-portal.yml'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
     inputs:
@@ -284,6 +286,8 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
+          # Only the app binaries (the launch-check artifact is diagnostics, not part of the release)
+          pattern: '{android,ios}'
           merge-multiple: true
       - name: Bump version & collect builds
         run: |

@@ -5,6 +5,7 @@ import type { SignupInput } from '@/gql/graphql';
 import { MeQuery } from '@/graphql/queries';
 import { LoginMutation, SignupMutation } from '@/graphql/mutations';
 import { gql, loadApiUrl, setAuthToken, setUnauthenticatedHandler } from './api';
+import { flushPendingLogs } from './crash';
 import { logError } from './log';
 import type { User } from './types';
 
@@ -50,11 +51,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     const restore = async () => {
       await loadApiUrl();
       const [token, stored] = await Promise.all([SecureStore.getItemAsync(TOKEN_KEY), SecureStore.getItemAsync(USER_KEY)]);
+      const signedIn = Boolean(token && stored);
+      if (signedIn) setAuthToken(token);
+      // Reports a previous session couldn't send (e.g. the app closed on a crash), now with the right server + user
+      flushPendingLogs().catch(logError('crash'));
       if (!token || !stored) {
         setStatus('signedOut');
         return;
       }
-      setAuthToken(token);
       setUser(JSON.parse(stored) as User);
       setStatus('signedIn');
       const { me } = await gql(MeQuery);

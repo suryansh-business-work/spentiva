@@ -1,6 +1,10 @@
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import type { TypedDocumentString } from '@/gql/graphql';
+import { APP_META } from './crash/meta';
+
+/** Lets the API show each user's app build and last activity in the portal */
+const APP_HEADERS = { 'X-App-Version': APP_META.appVersion ?? 'unknown', 'X-App-Platform': APP_META.platform };
 
 const API_URL_KEY = 'spentiva.apiUrl';
 
@@ -52,7 +56,7 @@ async function post(body: string, timeoutMs: number): Promise<Response> {
   try {
     return await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...APP_HEADERS, ...(token && { Authorization: `Bearer ${token}` }) },
       body,
       signal: controller.signal,
     });
