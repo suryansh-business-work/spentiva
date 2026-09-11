@@ -28,7 +28,7 @@ export function TransactionCard({ message, user, category }: Readonly<Transactio
     <YStack gap={10}>
       <XStack alignItems="center" gap={12}>
         <IconBadge icon={iconFor(category?.icon)} color={category?.color ?? C.green} size={44} />
-        <YStack flex={1}>
+        <YStack flexGrow={1} flexShrink={1}>
           <Text fontSize={15} fontWeight="700" color={C.ink} numberOfLines={1}>
             {[tx.categoryName, tx.expenseOnName].filter(Boolean).join(' · ')}
           </Text>
