@@ -11,4 +11,5 @@ Versions follow [Semantic Versioning](https://semver.org) from Conventional Comm
 
 | Version | Channel | Built | Commit | Files |
 |---|---|---|---|---|
+| 1.0.1 | staging | 2026-09-11 | `e6752f5` | [AAB](staging/v1.0.1/Spentiva-v1.0.1-staging.aab) (39.7 MB) · [APK](staging/v1.0.1/Spentiva-v1.0.1-staging.apk) (49.93 MB) · [IPA](staging/v1.0.1/Spentiva-v1.0.1-staging.ipa) (10.75 MB) |
 | 1.0.0 | staging | 2026-09-11 | `129cf80` | [AAB](staging/v1.0.0/Spentiva-v1.0.0-staging.aab) (39.7 MB) · [APK](staging/v1.0.0/Spentiva-v1.0.0-staging.apk) (49.93 MB) · [IPA](staging/v1.0.0/Spentiva-v1.0.0-staging.ipa) (10.75 MB) |
