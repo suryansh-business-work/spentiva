@@ -1,0 +1,116 @@
+name: Deploy Backend
+
+# Builds the API Docker image (GHCR) and runs it on the VPS behind nginx at
+# https://spentiva.exyconn.com (container `spentiva-api`, host port 127.0.0.1:API_PORT → 4000).
+# All configuration comes from GitHub Actions secrets (MongoDB, JWT, OpenAI, Slack, …).
+on:
+  push:
+    branches: [staging, main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}-api
+      API_PORT: ${{ vars.API_PORT || '4100' }}
+      CONTAINER: spentiva-api
+      # App configuration (server defaults; admins can override OpenAI/Slack in the app)
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || vars.OPENAI_MODEL || 'gpt-4o' }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+      CI_TOKEN: ${{ secrets.CI_TOKEN }}
+      SETTINGS_SECRET: ${{ secrets.SETTINGS_SECRET }}
+      ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+      CORS_ORIGIN: ${{ vars.CORS_ORIGIN || '*' }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check configuration
+        id: config
+        run: |
+          missing=""
+          for k in MONGODB_URI JWT_SECRET SSH_HOST; do [ -z "${!k}" ] && missing="$missing $k"; done
+          if [ -n "$missing" ]; then
+            echo "::warning::Deploy skipped – missing secrets:$missing (image is still built and pushed)"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+          [ -z "$OPENAI_API_KEY" ] && echo "::notice::OPENAI_API_KEY not set – chat parsing needs a key (secret or app settings)"
+          true
+
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: backend
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to VPS (SSH + Docker)
+        if: steps.config.outputs.ready == 'true'
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ github.token }}
+          TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          envs: IMAGE,TAG,GHCR_USER,GHCR_TOKEN,API_PORT,CONTAINER,MONGODB_URI,JWT_SECRET,OPENAI_API_KEY,OPENAI_MODEL,SLACK_BOT_TOKEN,SLACK_CHANNEL_ID,CI_TOKEN,SETTINGS_SECRET,ADMIN_EMAILS,CORS_ORIGIN
+          script: |
+            set -e
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker pull "$IMAGE:$TAG"
+            docker logout ghcr.io
+            docker rm -f "$CONTAINER" 2>/dev/null || true
+            docker run -d --name "$CONTAINER" --restart unless-stopped -p "127.0.0.1:$API_PORT:4000" \
+              --memory 512m \
+              -e NODE_ENV=production -e PORT=4000 \
+              -e MONGODB_URI -e JWT_SECRET -e OPENAI_API_KEY -e OPENAI_MODEL \
+              -e SLACK_BOT_TOKEN -e SLACK_CHANNEL_ID -e CI_TOKEN -e SETTINGS_SECRET \
+              -e ADMIN_EMAILS -e CORS_ORIGIN \
+              "$IMAGE:$TAG"
+            for i in $(seq 1 30); do
+              if curl -fsS "http://127.0.0.1:$API_PORT/healthz" >/dev/null; then echo "API healthy"; break; fi
+              if [ "$i" = 30 ]; then echo "API did not become healthy"; docker logs --tail 80 "$CONTAINER"; exit 1; fi
+              sleep 2
+            done
+            docker image prune -f >/dev/null
+
+      - name: Summary
+        env:
+          READY: ${{ steps.config.outputs.ready }}
+        run: |
+          {
+            echo "## Backend"
+            echo "- Image: \`$IMAGE:${GITHUB_SHA::7}\`"
+            if [ "$READY" = "true" ]; then echo "- Deployed: https://spentiva.exyconn.com/graphql"; else echo "- Not deployed (missing secrets, see warnings)"; fi
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,59 @@
+name: CI
+
+# Checks for pull requests and feature branches
+# (staging/main pushes run the full "Build & Release Apps" pipeline instead).
+on:
+  pull_request:
+  push:
+    branches-ignore: [main, staging]
+    paths-ignore:
+      - 'builds/**'
+      - '**/*.md'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - name: GraphQL codegen is up to date
+        run: |
+          npm run codegen
+          git diff --exit-code -- src/gql || (echo "::error::Run 'npm run codegen' in mobile/ and commit src/gql" && exit 1)
+      - name: Bundle check (Metro, Android)
+        run: npx expo export --platform android --output-dir /tmp/expo-export
+        env:
+          EXPO_NO_TELEMETRY: 1
