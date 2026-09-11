@@ -1,0 +1,12 @@
+{
+  "name": "spentiva-repo",
+  "private": true,
+  "description": "Repo tooling only (git hooks + release scripts). The apps live in mobile/, backend/ and portal/.",
+  "scripts": {
+    "prepare": "husky",
+    "version:bump": "node scripts/bump-version.mjs --bump"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

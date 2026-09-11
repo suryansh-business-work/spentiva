@@ -1,0 +1,16 @@
+# Every push carries one version bump. The first commit after a push asks for it
+# (interactive terminal), else uses $VERSION_BUMP, else patch. See scripts/bump-version.mjs.
+node scripts/bump-version.mjs --needed || exit 0
+
+bump="${VERSION_BUMP:-}"
+if [ -z "$bump" ] && (exec </dev/tty) 2>/dev/null; then
+  printf 'Version bump for this push? [p]atch / [m]inor / [M]ajor (Enter = patch): ' >/dev/tty
+  read -r answer </dev/tty
+  case "$answer" in
+    M | major) bump=major ;;
+    m | minor) bump=minor ;;
+    *) bump=patch ;;
+  esac
+fi
+
+node scripts/bump-version.mjs --bump "${bump:-patch}"

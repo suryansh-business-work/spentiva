@@ -202,6 +202,41 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # Opens the new APK on an emulator and keeps logcat, so a crash on launch shows up here
+  # before anyone installs the build. Diagnostic only — it never blocks a release.
+  launch-check:
+    name: Android launch check (emulator)
+    needs: [prepare, android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: android
+          path: apk
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Launch on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: true
+          script: bash scripts/android-launch-check.sh apk
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: launch-check
+          path: launch-check/
+          retention-days: 14
+
   publish:
     name: Publish (repo · release · Drive · Slack)
     needs: [prepare, android, ios]
@@ -229,13 +264,13 @@ jobs:
       - name: Bump version & collect builds
         run: |
           ls -lh artifacts
-          (cd mobile && npm version "$VERSION" --no-git-tag-version --allow-same-version)
+          node scripts/bump-version.mjs --set "$VERSION"
           node scripts/collect-builds.mjs --from artifacts --channel "$CHANNEL" --version "$VERSION" --version-code "$VERSION_CODE" --tag "$TAG"
       - name: Commit, push & tag
         run: |
           git config user.name "spentiva-release-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mobile/package.json mobile/package-lock.json builds
+          git add -- builds '*package.json' '*package-lock.json'
           git commit -m "chore(release): v$VERSION ($CHANNEL) [skip ci]" || echo "Nothing to commit"
           for attempt in 1 2 3; do
             git pull --rebase origin "$BRANCH" && git push origin "HEAD:$BRANCH" && break
