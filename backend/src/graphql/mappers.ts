@@ -1,0 +1,72 @@
+import type { UserDoc } from '../models/User.js';
+import type { CategoryDoc } from '../models/Category.js';
+import type { PaymentSourceDoc } from '../models/PaymentSource.js';
+import type { TransactionDoc } from '../models/Transaction.js';
+import type { ChatMessageDoc } from '../models/ChatMessage.js';
+
+const idOrNull = (v: unknown) => (v ? String(v) : null);
+
+export const toUser = (u: UserDoc) => ({
+  id: u.id as string,
+  name: u.name,
+  email: u.email,
+  currency: u.currency,
+  timezone: u.timezone,
+  locale: u.locale,
+  monthlyBudget: u.monthlyBudget ?? null,
+  isAdmin: u.role === 'ADMIN',
+  createdAt: u.createdAt,
+});
+
+export const toCategory = (c: CategoryDoc) => ({
+  id: c.id as string,
+  name: c.name,
+  type: c.type,
+  icon: c.icon,
+  color: c.color,
+  items: c.items.map((i) => ({ id: String(i._id), name: i.name })),
+});
+
+export const toSource = (s: PaymentSourceDoc) => ({
+  id: s.id as string,
+  name: s.name,
+  icon: s.icon,
+  isDefault: s.isDefault,
+});
+
+export const toTransaction = (t: TransactionDoc) => ({
+  id: t.id as string,
+  type: t.type,
+  amount: t.amount,
+  currency: t.currency,
+  amountBase: t.amountBase,
+  baseCurrency: t.baseCurrency,
+  fxRate: t.fxRate,
+  categoryId: idOrNull(t.categoryId),
+  categoryName: t.categoryName,
+  expenseOnId: idOrNull(t.expenseOnId),
+  expenseOnName: t.expenseOnName ?? null,
+  sourceId: idOrNull(t.sourceId),
+  sourceName: t.sourceName ?? null,
+  note: t.note ?? null,
+  occurredAt: t.occurredAt,
+  via: t.via,
+  createdAt: t.createdAt,
+});
+
+export type TransactionOut = ReturnType<typeof toTransaction>;
+
+export const toChatMessage = (m: ChatMessageDoc, tx?: TransactionDoc | null) => ({
+  id: m.id as string,
+  role: m.role,
+  kind: m.kind,
+  text: m.text,
+  transaction: tx ? toTransaction(tx) : null,
+  options: m.options.map((o) => ({ id: o.id, label: o.label, action: o.action, value: o.value ?? null })),
+  selectedOptionId: m.selectedOptionId ?? null,
+  resolved: m.resolved,
+  report: m.report ?? null,
+  createdAt: m.createdAt,
+});
+
+export type ChatMessageOut = ReturnType<typeof toChatMessage>;

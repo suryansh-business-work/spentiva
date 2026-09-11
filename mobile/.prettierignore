@@ -1,0 +1,9 @@
+node_modules
+android
+ios
+.expo
+.tamagui
+dist
+package-lock.json
+src/components/chart/chartjs.generated.ts
+*.png
