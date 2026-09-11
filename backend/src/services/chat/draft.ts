@@ -135,13 +135,14 @@ function occurredAt(draft: Draft, tz: string): Date {
 /** Ask for the next missing piece, or log the transaction when everything is known */
 export async function advance(ctx: Ctx, draft: Draft): Promise<Step> {
   if (!draft.amount) return { kind: 'TEXT', text: 'How much was it? Try something like “250 on lunch”.' };
-  const amountText = formatMoney(draft.amount, draft.currency ?? ctx.user.currency, ctx.user.locale);
+  const amountText = formatMoney(draft.amount, draft.currency ?? ctx.tracker.currency, ctx.user.locale);
   const question = askType(draft, amountText) ?? askCategory(ctx, draft, amountText) ?? askExpenseOn(ctx, draft) ?? askSource(ctx, draft, amountText);
   if (question) return question;
   const categoryId = draft.categoryId;
   if (!categoryId) return { kind: 'TEXT', text: 'Which category was it for?' };
   const tx = await createTransaction(
     ctx.user,
+    ctx.tracker,
     {
       type: draft.type,
       amount: draft.amount,

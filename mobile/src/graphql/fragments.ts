@@ -8,7 +8,6 @@ export const UserFields = graphql(`
     currency
     timezone
     locale
-    monthlyBudget
     isAdmin
     createdAt
   }
@@ -55,6 +54,8 @@ export const TxFields = graphql(`
     note
     occurredAt
     via
+    addedById
+    addedByName
     createdAt
   }
 `);

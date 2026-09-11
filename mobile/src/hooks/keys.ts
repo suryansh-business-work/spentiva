@@ -1,15 +1,18 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { ReportInput, TransactionFilter } from '@/lib/types';
 
+/** Tracker data is keyed by tracker, so switching trackers never shows another tracker's numbers */
 export const keys = {
-  categories: ['categories'] as const,
-  sources: ['sources'] as const,
+  trackers: ['trackers'] as const,
+  categories: (trackerId: string) => ['categories', trackerId] as const,
+  sources: (trackerId: string) => ['sources', trackerId] as const,
   reference: ['reference'] as const,
-  dashboard: (month: string) => ['dashboard', month] as const,
-  report: (input: ReportInput) => ['report', input] as const,
-  transactions: (filter: TransactionFilter) => ['transactions', filter] as const,
+  dashboard: (trackerId: string, month: string) => ['dashboard', trackerId, month] as const,
+  report: (trackerId: string, input: ReportInput) => ['report', trackerId, input] as const,
+  transactions: (trackerId: string, filter: TransactionFilter) => ['transactions', trackerId, filter] as const,
   transaction: (id?: string) => ['transaction', id] as const,
-  chat: ['chat'] as const,
+  chat: (trackerId: string) => ['chat', trackerId] as const,
+  emailReports: (trackerId: string) => ['emailReports', trackerId] as const,
   env: ['env'] as const,
   slack: ['slackChannels'] as const,
   models: ['openAiModels'] as const,

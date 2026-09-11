@@ -5,10 +5,12 @@ import type {
   EnvFieldsFragment,
   ReferenceQuery,
   ReportFieldsFragment,
+  ScheduleFieldsFragment,
   SlackChannelsQuery,
   SliceFieldsFragment,
   SourceFieldsFragment,
   TicketFieldsFragment,
+  TrackerFieldsFragment,
   TxFieldsFragment,
   UserFieldsFragment,
   ValidationRulesQuery,
@@ -21,11 +23,14 @@ export type {
   ChatRole,
   EnvSource,
   Period,
+  ReportFrequency,
   ReportInput,
   ReportKind,
   StatFormat,
   TicketCategory,
   TicketStatus,
+  TrackerKind,
+  TrackerRole,
   TransactionFilter,
   TransactionInput,
   TxType,
@@ -48,5 +53,10 @@ export type SlackChannel = SlackChannelsQuery['slackChannels'][number];
 export type Currency = ReferenceQuery['currencies'][number];
 export type SupportTicket = TicketFieldsFragment;
 export type TicketMessage = SupportTicket['messages'][number];
+/** A separate book of expenses (Home, Business …) that can be shared */
+export type Tracker = TrackerFieldsFragment;
+export type TrackerMember = Tracker['members'][number];
+/** An email report the user gets for a tracker */
+export type EmailReportSchedule = ScheduleFieldsFragment;
 /** Form limits the API enforces (validationRules) */
 export type ValidationRules = ValidationRulesQuery['validationRules'];

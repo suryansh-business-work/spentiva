@@ -73,6 +73,8 @@ export const typeDefs = /* GraphQL */ `
     LAST_MONTH
     LAST_30_DAYS
     LAST_90_DAYS
+    THIS_QUARTER
+    LAST_QUARTER
     LAST_6_MONTHS
     LAST_12_MONTHS
     THIS_YEAR
@@ -84,13 +86,13 @@ export const typeDefs = /* GraphQL */ `
     id: ID!
     name: String!
     email: String!
-    "ISO 4217"
+    "ISO 4217 currency new trackers start with"
     currency: String!
     "IANA time zone"
     timezone: String!
     "BCP 47"
     locale: String!
-    monthlyBudget: Float
+    monthlyBudget: Float @deprecated(reason: "Budgets belong to trackers: use Tracker.monthlyBudget")
     isAdmin: Boolean!
     createdAt: DateTime!
   }
@@ -140,6 +142,9 @@ export const typeDefs = /* GraphQL */ `
     note: String
     occurredAt: DateTime!
     via: TxVia!
+    "Who logged it (useful on shared trackers)"
+    addedById: ID!
+    addedByName: String
     createdAt: DateTime!
   }
 
@@ -266,10 +271,12 @@ export const typeDefs = /* GraphQL */ `
 
   input ProfileInput {
     name: String
+    "Currency new trackers start with"
     currency: String
     timezone: String
     locale: String
-    monthlyBudget: Float
+    "Sets the budget of your default tracker"
+    monthlyBudget: Float @deprecated(reason: "Use updateTracker")
   }
 
   input CategoryInput {
@@ -295,7 +302,7 @@ export const typeDefs = /* GraphQL */ `
   input TransactionInput {
     type: TxType!
     amount: Float!
-    "ISO 4217, defaults to the user's currency"
+    "ISO 4217, defaults to the tracker's currency"
     currency: String
     categoryId: ID!
     expenseOnId: ID
@@ -333,16 +340,21 @@ export const typeDefs = /* GraphQL */ `
     value: String
   }
 
+  """
+  Everything below that takes a trackerId works on that tracker (you need access to it);
+  without one it uses your default tracker.
+  """
   type Query {
     me: User
-    categories(type: TxType): [Category!]!
-    paymentSources: [PaymentSource!]!
-    transactions(filter: TransactionFilter, limit: Int, offset: Int): TransactionPage!
+    categories(trackerId: ID, type: TxType): [Category!]!
+    paymentSources(trackerId: ID): [PaymentSource!]!
+    transactions(trackerId: ID, filter: TransactionFilter, limit: Int, offset: Int): TransactionPage!
     transaction(id: ID!): Transaction
     "Defaults to the current month; month is YYYY-MM in the user's time zone"
-    dashboard(month: String, from: DateTime, to: DateTime): Dashboard!
-    report(input: ReportInput!): Report!
-    chatHistory(limit: Int, before: DateTime): [ChatMessage!]!
+    dashboard(trackerId: ID, month: String, from: DateTime, to: DateTime): Dashboard!
+    report(trackerId: ID, input: ReportInput!): Report!
+    "Your own conversation in that tracker"
+    chatHistory(trackerId: ID, limit: Int, before: DateTime): [ChatMessage!]!
     chatSuggestions: [String!]!
     currencies: [Currency!]!
     "IANA time zone identifiers"
@@ -358,27 +370,29 @@ export const typeDefs = /* GraphQL */ `
     updateProfile(input: ProfileInput!): User!
     changePassword(current: String!, next: String!): Boolean!
 
-    createCategory(input: CategoryInput!): Category!
+    createCategory(trackerId: ID, input: CategoryInput!): Category!
     updateCategory(id: ID!, input: CategoryUpdateInput!): Category!
     deleteCategory(id: ID!): Boolean!
     addExpenseOn(categoryId: ID!, name: String!): Category!
     renameExpenseOn(categoryId: ID!, itemId: ID!, name: String!): Category!
     removeExpenseOn(categoryId: ID!, itemId: ID!): Category!
 
-    createPaymentSource(input: PaymentSourceInput!): PaymentSource!
+    createPaymentSource(trackerId: ID, input: PaymentSourceInput!): PaymentSource!
     updatePaymentSource(id: ID!, input: PaymentSourceInput!): PaymentSource!
     deletePaymentSource(id: ID!): Boolean!
 
-    createTransaction(input: TransactionInput!): Transaction!
+    createTransaction(trackerId: ID, input: TransactionInput!): Transaction!
     updateTransaction(id: ID!, input: TransactionInput!): Transaction!
     deleteTransaction(id: ID!): Boolean!
 
-    sendChatMessage(text: String!): [ChatMessage!]!
+    sendChatMessage(trackerId: ID, text: String!): [ChatMessage!]!
     chooseChatOption(messageId: ID!, optionId: ID!): [ChatMessage!]!
-    clearChat: Boolean!
+    clearChat(trackerId: ID): Boolean!
 
     setEnvVars(input: [EnvVarInput!]!): [EnvVar!]!
     testSlack: Boolean!
     testOpenAi: String!
+    "Sends a test email to you; returns the address"
+    testEmail: String!
   }
 `;

@@ -19,7 +19,7 @@ async function findOrCreateCategory(ctx: Ctx, type: Draft['type'], name: string)
   if (existing) return existing;
   try {
     const created = await Category.create({
-      userId: ctx.user._id,
+      trackerId: ctx.tracker._id,
       name,
       type,
       icon: 'other',
@@ -29,7 +29,7 @@ async function findOrCreateCategory(ctx: Ctx, type: Draft['type'], name: string)
     return created;
   } catch (err) {
     if (!isDuplicateKey(err)) throw err;
-    const found = await Category.findOne({ userId: ctx.user._id, type, name }).collation({ locale: 'en', strength: 2 });
+    const found = await Category.findOne({ trackerId: ctx.tracker._id, type, name }).collation({ locale: 'en', strength: 2 });
     if (!found) throw err;
     return found;
   }
@@ -80,7 +80,7 @@ const HANDLERS: Record<string, Handler> = {
     const name = cleanName(value, 'Payment mode');
     let source = ctx.sources.find((s) => sameName(s.name, name));
     if (!source) {
-      source = await PaymentSource.create({ userId: ctx.user._id, name, icon: 'wallet', isDefault: ctx.sources.length === 0 });
+      source = await PaymentSource.create({ trackerId: ctx.tracker._id, name, icon: 'wallet', isDefault: ctx.sources.length === 0 });
       ctx.sources.push(source);
     }
     draft.sourceId = source.id;

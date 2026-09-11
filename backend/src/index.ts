@@ -8,10 +8,13 @@ import { resolvers } from './graphql/resolvers/index.js';
 import { commonTypeDefs } from './graphql/schema/common.js';
 import { logTypeDefs } from './graphql/schema/logs.js';
 import { supportTypeDefs } from './graphql/schema/support.js';
+import { trackerTypeDefs } from './graphql/schema/trackers.js';
 import { userTypeDefs } from './graphql/schema/users.js';
 import { typeDefs } from './graphql/typeDefs.js';
 import { getSetting } from './services/appSettings.js';
+import { startReportScheduler } from './services/email/scheduler.js';
 import { recordServerError } from './services/logs.js';
+import { migrateToTrackers } from './services/trackers/migrate.js';
 
 function authorizedCi(header: string | null): boolean {
   const expected = process.env.CI_TOKEN;
@@ -47,7 +50,7 @@ const httpRoutes: Plugin = {
 };
 
 const yoga = createYoga({
-  schema: createSchema<Context>({ typeDefs: [typeDefs, commonTypeDefs, logTypeDefs, supportTypeDefs, userTypeDefs], resolvers }),
+  schema: createSchema<Context>({ typeDefs: [typeDefs, commonTypeDefs, logTypeDefs, supportTypeDefs, trackerTypeDefs, userTypeDefs], resolvers }),
   context: createContext,
   graphqlEndpoint: '/graphql',
   graphiql: !isProd,
@@ -84,7 +87,9 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
 
 try {
   await connectDb();
+  await migrateToTrackers();
   server.listen(env.PORT, () => console.log(`Spentiva API ready at http://localhost:${env.PORT}/graphql`));
+  startReportScheduler();
 } catch (err) {
   console.error('Failed to start server', err);
   process.exit(1);

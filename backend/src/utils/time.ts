@@ -2,15 +2,19 @@ import { TZDate } from '@date-fns/tz';
 import {
   addDays,
   addMonths,
+  addQuarters,
+  differenceInCalendarMonths,
   eachDayOfInterval,
   eachMonthOfInterval,
   format,
   startOfDay,
   startOfMonth,
+  startOfQuarter,
   startOfWeek,
   startOfYear,
   subDays,
   subMonths,
+  subQuarters,
   subWeeks,
   subYears,
 } from 'date-fns';
@@ -25,6 +29,8 @@ export const PERIODS = [
   'LAST_MONTH',
   'LAST_30_DAYS',
   'LAST_90_DAYS',
+  'THIS_QUARTER',
+  'LAST_QUARTER',
   'LAST_6_MONTHS',
   'LAST_12_MONTHS',
   'THIS_YEAR',
@@ -47,6 +53,7 @@ export function periodRange(key: PeriodKey, tz: string, now: Date = new Date()):
   const today = startOfDay(n);
   const week = startOfWeek(n, { weekStartsOn: 1 });
   const month = startOfMonth(n);
+  const quarter = startOfQuarter(n);
   const year = startOfYear(n);
   switch (key) {
     case 'TODAY':
@@ -67,6 +74,10 @@ export function periodRange(key: PeriodKey, tz: string, now: Date = new Date()):
       return { from: plain(subDays(today, 29)), to: plain(addDays(today, 1)) };
     case 'LAST_90_DAYS':
       return { from: plain(subDays(today, 89)), to: plain(addDays(today, 1)) };
+    case 'THIS_QUARTER':
+      return { from: plain(quarter), to: plain(addQuarters(quarter, 1)) };
+    case 'LAST_QUARTER':
+      return { from: plain(subQuarters(quarter, 1)), to: plain(quarter) };
     case 'LAST_6_MONTHS':
       return { from: plain(subMonths(month, 5)), to: plain(addMonths(month, 1)) };
     case 'LAST_12_MONTHS':
@@ -95,11 +106,12 @@ export function lastDaysRange(n: number, tz: string, end: Date): Range {
   return { from: plain(subDays(endDay, n - 1)), to: plain(addDays(endDay, 1)) };
 }
 
-/** The comparable range right before `range` (previous calendar month for month ranges) */
+/** The comparable range right before `range` (the previous month / quarter / year for whole-month ranges) */
 export function previousRange(range: Range, tz: string): Range {
   const from = new TZDate(range.from.getTime(), tz);
-  const isMonth = from.getTime() === startOfMonth(from).getTime() && addMonths(from, 1).getTime() === range.to.getTime();
-  if (isMonth) return { from: plain(subMonths(from, 1)), to: range.from };
+  const months = differenceInCalendarMonths(new TZDate(range.to.getTime(), tz), from);
+  const wholeMonths = months > 0 && from.getTime() === startOfMonth(from).getTime() && addMonths(from, months).getTime() === range.to.getTime();
+  if (wholeMonths) return { from: plain(subMonths(from, months)), to: range.from };
   const len = range.to.getTime() - range.from.getTime();
   return { from: new Date(range.from.getTime() - len), to: range.from };
 }

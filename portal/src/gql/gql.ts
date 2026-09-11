@@ -40,6 +40,7 @@ type Documents = {
     "\n  mutation PortalSetEnvVars($input: [EnvVarInput!]!) {\n    setEnvVars(input: $input) {\n      ...EnvFields\n    }\n  }\n": typeof types.PortalSetEnvVarsDocument,
     "\n  mutation PortalTestSlack {\n    testSlack\n  }\n": typeof types.PortalTestSlackDocument,
     "\n  mutation PortalTestOpenAi {\n    testOpenAi\n  }\n": typeof types.PortalTestOpenAiDocument,
+    "\n  mutation PortalTestEmail {\n    testEmail\n  }\n": typeof types.PortalTestEmailDocument,
     "\n  query AdminTickets($filter: TicketFilter, $page: PageInput) {\n    adminTickets(filter: $filter, page: $page) {\n      total\n      items {\n        ...TicketRowFields\n      }\n    }\n  }\n": typeof types.AdminTicketsDocument,
     "\n  query AdminTicket($id: ID!) {\n    supportTicket(id: $id) {\n      ...TicketDetailFields\n    }\n  }\n": typeof types.AdminTicketDocument,
     "\n  mutation AdminReplyTicket($id: ID!, $body: String!, $status: TicketStatus) {\n    adminReplyTicket(id: $id, body: $body, status: $status) {\n      ...TicketDetailFields\n    }\n  }\n": typeof types.AdminReplyTicketDocument,
@@ -77,6 +78,7 @@ const documents: Documents = {
     "\n  mutation PortalSetEnvVars($input: [EnvVarInput!]!) {\n    setEnvVars(input: $input) {\n      ...EnvFields\n    }\n  }\n": types.PortalSetEnvVarsDocument,
     "\n  mutation PortalTestSlack {\n    testSlack\n  }\n": types.PortalTestSlackDocument,
     "\n  mutation PortalTestOpenAi {\n    testOpenAi\n  }\n": types.PortalTestOpenAiDocument,
+    "\n  mutation PortalTestEmail {\n    testEmail\n  }\n": types.PortalTestEmailDocument,
     "\n  query AdminTickets($filter: TicketFilter, $page: PageInput) {\n    adminTickets(filter: $filter, page: $page) {\n      total\n      items {\n        ...TicketRowFields\n      }\n    }\n  }\n": types.AdminTicketsDocument,
     "\n  query AdminTicket($id: ID!) {\n    supportTicket(id: $id) {\n      ...TicketDetailFields\n    }\n  }\n": types.AdminTicketDocument,
     "\n  mutation AdminReplyTicket($id: ID!, $body: String!, $status: TicketStatus) {\n    adminReplyTicket(id: $id, body: $body, status: $status) {\n      ...TicketDetailFields\n    }\n  }\n": types.AdminReplyTicketDocument,
@@ -189,6 +191,10 @@ export function graphql(source: "\n  mutation PortalTestSlack {\n    testSlack\n
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation PortalTestOpenAi {\n    testOpenAi\n  }\n"): typeof import('./graphql').PortalTestOpenAiDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PortalTestEmail {\n    testEmail\n  }\n"): typeof import('./graphql').PortalTestEmailDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

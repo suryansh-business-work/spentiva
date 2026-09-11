@@ -44,3 +44,9 @@ export const TestOpenAiMutation = graphql(`
     testOpenAi
   }
 `);
+
+export const TestEmailMutation = graphql(`
+  mutation PortalTestEmail {
+    testEmail
+  }
+`);

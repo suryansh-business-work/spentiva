@@ -21,7 +21,9 @@ function title(tx: Transaction) {
 export const TransactionRow = memo(function TransactionRow({ tx, category, user, onPress, showDate }: Readonly<TransactionRowProps>) {
   const income = tx.type === 'INCOME';
   const when = formatDate(tx.occurredAt, user, showDate ? 'dateTime' : 'time');
-  const meta = [tx.expenseOnName, tx.sourceName, when].filter(Boolean).join(' · ');
+  // On shared trackers, entries someone else logged say who
+  const by = tx.addedById !== user.id && tx.addedByName ? `by ${tx.addedByName}` : null;
+  const meta = [tx.expenseOnName, tx.sourceName, by, when].filter(Boolean).join(' · ');
   const sign = income ? '+' : '−';
   return (
     <XStack alignItems="center" gap={12} paddingVertical={10} pressStyle={onPress ? { opacity: 0.6 } : undefined} onPress={onPress} role="button">

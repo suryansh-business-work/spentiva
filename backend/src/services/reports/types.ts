@@ -1,5 +1,5 @@
+import type { Types } from 'mongoose';
 import type { PeriodKey, Range } from '../../utils/time.js';
-import type { UserDoc } from '../../models/User.js';
 
 export const REPORT_KINDS = ['CATEGORY', 'EXPENSE_ON', 'SOURCE', 'DAILY', 'MONTHLY', 'TOP', 'AVERAGE', 'INCOME_VS_EXPENSE'] as const;
 export type ReportKind = (typeof REPORT_KINDS)[number];
@@ -47,9 +47,18 @@ export interface ReportParams {
   limit?: number | null;
 }
 
+/** Whose numbers (a tracker, in its currency) seen through whose settings (the viewer's zone & locale) */
+export interface ReportScope {
+  trackerId: Types.ObjectId;
+  currency: string;
+  budget: number | null;
+  timezone: string;
+  locale: string;
+}
+
 /** What every per-kind builder receives */
 export interface BuildCtx {
-  user: UserDoc;
+  scope: ReportScope;
   params: ReportParams;
   type: TxType;
   range: Range;

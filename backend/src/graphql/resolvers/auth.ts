@@ -1,7 +1,6 @@
 import { User } from '../../models/User.js';
 import { hashPassword, signToken, verifyPassword } from '../../services/auth.js';
-import { seedUserDefaults } from '../../services/seed.js';
-import { rebaseTransactions } from '../../services/transactions.js';
+import { createTracker, defaultTracker } from '../../services/trackers/index.js';
 import { badInput, validate } from '../../utils/errors.js';
 import type { Context } from '../context.js';
 import { LoginZ, PasswordZ, ProfileZ, SignupZ } from '../inputs.js';
@@ -35,7 +34,7 @@ export const authResolvers = {
         locale: data.locale ?? 'en-IN',
         role: isFirst || adminEmails().has(data.email) ? 'ADMIN' : 'USER',
       });
-      await seedUserDefaults(user._id);
+      await createTracker(user, { name: 'Home', kind: 'PERSONAL', currency: user.currency });
       return { token: signToken(user.id), user: toUser(user) };
     },
 
@@ -54,16 +53,15 @@ export const authResolvers = {
     updateProfile: async (_: unknown, { input }: Input, ctx: Context) => {
       const user = await ctx.user();
       const data = validate(ProfileZ, input);
-      const currencyChanged = data.currency && data.currency !== user.currency;
       user.set({
         ...(data.name && { name: data.name }),
         ...(data.currency && { currency: data.currency }),
         ...(data.timezone && { timezone: data.timezone }),
         ...(data.locale && { locale: data.locale }),
-        ...(data.monthlyBudget !== undefined && { monthlyBudget: data.monthlyBudget }),
       });
-      if (currencyChanged) await rebaseTransactions(user._id, user.currency);
       await user.save();
+      // Deprecated input from app builds before trackers: the budget now lives on the default tracker
+      if (data.monthlyBudget !== undefined) await (await defaultTracker(user._id)).updateOne({ monthlyBudget: data.monthlyBudget });
       return toUser(user);
     },
 

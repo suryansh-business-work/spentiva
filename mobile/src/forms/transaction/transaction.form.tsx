@@ -9,6 +9,7 @@ import { useSaveTransaction } from '@/hooks/mutations';
 import { useCategories, useSources } from '@/hooks/queries';
 import { TX_TYPE_OPTIONS } from '@/lib/constants';
 import { runAsync } from '@/lib/log';
+import { useTracker } from '@/lib/tracker';
 import type { Transaction, User } from '@/lib/types';
 import { AmountInput } from './parts/AmountInput';
 import { DateField } from './parts/DateField';
@@ -26,8 +27,9 @@ const COPY = {
   INCOME: { category: 'Income category', item: 'Received for', source: 'Received in', submit: 'Add income' },
 };
 
-/** Manual add / edit of an expense or income entry */
+/** Manual add / edit of an expense or income entry (in the active tracker) */
 export function TransactionForm({ user, existing, onDone }: Readonly<TransactionFormProps>) {
+  const tracker = useTracker();
   const { data: categories } = useCategories();
   const { data: sources } = useSources();
   const save = useSaveTransaction();
@@ -35,7 +37,7 @@ export function TransactionForm({ user, existing, onDone }: Readonly<Transaction
 
   const { control, handleSubmit, setValue, reset } = useForm<TransactionValues>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: transactionDefaults(user.currency, user.timezone, defaultSource),
+    defaultValues: transactionDefaults(tracker.currency, user.timezone, defaultSource),
   });
 
   useEffect(() => {

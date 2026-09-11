@@ -9,6 +9,7 @@ import { SourceForm, toSourceInput } from '@/forms/source';
 import { useDeleteSource, useUpdateSource } from '@/hooks/mutations';
 import { useSources } from '@/hooks/queries';
 import { runAsync } from '@/lib/log';
+import { canEdit, useTracker } from '@/lib/tracker';
 import type { PaymentSource } from '@/lib/types';
 
 function SourceActions({ source, onDone }: Readonly<{ source: PaymentSource; onDone: () => void }>) {
@@ -47,6 +48,8 @@ function SourceActions({ source, onDone }: Readonly<{ source: PaymentSource; onD
 
 /** Payment modes ("Expense From"): Credit card, Debit card, UPI, Cash … */
 export default function SourcesScreen() {
+  const tracker = useTracker();
+  const editable = canEdit(tracker.role);
   const { data, isLoading, error, refetch } = useSources();
   const [editing, setEditing] = useState<PaymentSource | null>(null);
   const [open, setOpen] = useState(false);
@@ -70,7 +73,7 @@ export default function SourcesScreen() {
               iconColor="#3B82F6"
               title={s.name}
               subtitle={s.isDefault ? 'Default' : null}
-              onPress={() => openSheet(s)}
+              onPress={editable ? () => openSheet(s) : undefined}
             />
           </Fragment>
         ))}
@@ -80,7 +83,12 @@ export default function SourcesScreen() {
 
   return (
     <Screen>
-      <Header title="Expense From" back right={<IconButton icon={FiPlus} onPress={() => openSheet(null)} label="Add payment mode" />} />
+      <Header
+        title="Expense From"
+        subtitle={tracker.name}
+        back
+        right={editable ? <IconButton icon={FiPlus} onPress={() => openSheet(null)} label="Add payment mode" /> : null}
+      />
       <Muted>Cards, UPI, cash, wallets — whatever you pay with. The default is used when a chat message doesn’t mention one.</Muted>
       {body}
       <AppSheet open={open} onOpenChange={setOpen}>

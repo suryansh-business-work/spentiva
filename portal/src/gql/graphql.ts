@@ -70,8 +70,13 @@ export type PageInput = {
 };
 
 export type ProfileInput = {
+  /** Currency new trackers start with */
   currency?: string | null | undefined;
   locale?: string | null | undefined;
+  /**
+   * Sets the budget of your default tracker
+   * @deprecated Use updateTracker
+   */
   monthlyBudget?: number | null | undefined;
   name?: string | null | undefined;
   timezone?: string | null | undefined;
@@ -254,6 +259,11 @@ export type PortalTestOpenAiMutationVariables = Exact<{ [key: string]: never; }>
 
 
 export type PortalTestOpenAiMutation = { testOpenAi: string };
+
+export type PortalTestEmailMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PortalTestEmailMutation = { testEmail: string };
 
 export type AdminTicketsQueryVariables = Exact<{
   filter?: TicketFilter | null | undefined;
@@ -698,6 +708,11 @@ export const PortalTestOpenAiDocument = new TypedDocumentString(`
   testOpenAi
 }
     `) as unknown as TypedDocumentString<PortalTestOpenAiMutation, PortalTestOpenAiMutationVariables>;
+export const PortalTestEmailDocument = new TypedDocumentString(`
+    mutation PortalTestEmail {
+  testEmail
+}
+    `) as unknown as TypedDocumentString<PortalTestEmailMutation, PortalTestEmailMutationVariables>;
 export const AdminTicketsDocument = new TypedDocumentString(`
     query AdminTickets($filter: TicketFilter, $page: PageInput) {
   adminTickets(filter: $filter, page: $page) {

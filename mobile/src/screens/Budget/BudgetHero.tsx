@@ -8,7 +8,7 @@ import type { Dashboard, User } from '@/lib/types';
 import { C } from '@/theme/colors';
 
 /** Big "Remaining" ring with insight + add buttons (design reference) */
-export function BudgetHero({ data, user }: Readonly<{ data: Dashboard; user: User }>) {
+export function BudgetHero({ data, user, canAdd }: Readonly<{ data: Dashboard; user: User; canAdd: boolean }>) {
   const base = data.budget ?? data.income;
   const progress = base > 0 ? Math.max(0, data.remaining) / base : 0;
   const over = data.remaining < 0;
@@ -27,7 +27,7 @@ export function BudgetHero({ data, user }: Readonly<{ data: Dashboard; user: Use
           </Tiny>
         </YStack>
       </Ring>
-      <IconButton icon={FiPlus} onPress={() => router.push('/transaction')} label="Add transaction" />
+      {canAdd ? <IconButton icon={FiPlus} onPress={() => router.push('/transaction')} label="Add transaction" /> : <YStack width={44} />}
     </XStack>
   );
 }

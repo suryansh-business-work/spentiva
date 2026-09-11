@@ -11,6 +11,7 @@ import { chatResolvers } from './chat.js';
 import { logResolvers } from './logs.js';
 import { moneyResolvers } from './money.js';
 import { supportResolvers } from './support.js';
+import { trackerResolvers } from './trackers.js';
 import { userResolvers } from './users.js';
 
 const referenceResolvers = {
@@ -30,6 +31,7 @@ const modules = [
   referenceResolvers,
   logResolvers,
   supportResolvers,
+  trackerResolvers,
   userResolvers,
 ];
 

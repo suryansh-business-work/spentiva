@@ -1,9 +1,17 @@
 import type { YogaInitialContext } from 'graphql-yoga';
+import type { TrackerDoc, TrackerRole } from '../models/Tracker.js';
 import { User, type UserDoc } from '../models/User.js';
 import { readToken } from '../services/auth.js';
 import { touchUser } from '../services/presence.js';
+import { loadTracker, type Need } from '../services/trackers/access.js';
 import { forbidden, unauthenticated } from '../utils/errors.js';
 import { readClient, type ClientInfo } from './client.js';
+
+export interface TrackerAccess {
+  user: UserDoc;
+  tracker: TrackerDoc;
+  role: TrackerRole;
+}
 
 export interface Context {
   userId: string | null;
@@ -11,6 +19,8 @@ export interface Context {
   /** Loads the authenticated user once per request, throws when logged out or disabled */
   user(): Promise<UserDoc>;
   admin(): Promise<UserDoc>;
+  /** The user plus a tracker they may use with at least `need` rights (no id = their default tracker) */
+  tracker(trackerId: string | null | undefined, need: Need): Promise<TrackerAccess>;
 }
 
 export function createContext({ request }: YogaInitialContext): Context {
@@ -36,6 +46,10 @@ export function createContext({ request }: YogaInitialContext): Context {
       const u = await user();
       if (u.role !== 'ADMIN') throw forbidden('This needs an admin account');
       return u;
+    },
+    async tracker(trackerId, need) {
+      const u = await user();
+      return { user: u, ...(await loadTracker(u, trackerId, need)) };
     },
   };
 }

@@ -9,6 +9,7 @@ import { useCreateCategory } from '@/hooks/mutations';
 import { useCategories } from '@/hooks/queries';
 import { CATEGORY_COLORS, TX_TYPE_OPTIONS } from '@/lib/constants';
 import { runAsync } from '@/lib/log';
+import { canEdit, useTracker } from '@/lib/tracker';
 import type { Category, TxType } from '@/lib/types';
 
 function NewCategorySheet({
@@ -60,6 +61,8 @@ function CategoryList({ list }: Readonly<{ list: Category[] }>) {
 
 /** Expense / income categories and their "Expense On" items */
 export default function CategoriesScreen() {
+  const tracker = useTracker();
+  const editable = canEdit(tracker.role);
   const [type, setType] = useState<TxType>('EXPENSE');
   const [open, setOpen] = useState(false);
   const { data, isLoading, error, refetch } = useCategories();
@@ -70,7 +73,12 @@ export default function CategoriesScreen() {
 
   return (
     <Screen>
-      <Header title="Categories" back right={<IconButton icon={FiPlus} onPress={() => setOpen(true)} label="New category" />} />
+      <Header
+        title="Categories"
+        subtitle={tracker.name}
+        back
+        right={editable ? <IconButton icon={FiPlus} onPress={() => setOpen(true)} label="New category" /> : null}
+      />
       <Segmented value={type} onChange={setType} options={TX_TYPE_OPTIONS} />
       <Muted>Each category has its own “Expense On” items (e.g. Food → Groceries, Restaurant). The chat uses these to file your messages.</Muted>
       {body}

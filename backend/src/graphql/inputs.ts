@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { LOG_LIMITS, RULES } from '../config/rules.js';
 import { LOG_LEVELS, LOG_SOURCES } from '../models/AppLog.js';
+import { REPORT_FREQUENCIES } from '../models/ReportSchedule.js';
 import { TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_STATUSES } from '../models/SupportTicket.js';
+import { MEMBER_ROLES, TRACKER_KINDS } from '../models/Tracker.js';
+import { EMAIL_PERIODS } from '../services/email/schedules.js';
 import { REPORT_KINDS } from '../services/reports/index.js';
 import { PERIODS } from '../utils/time.js';
 import { zColor, zCurrency, zLocale, zName, zObjectId, zTimeZone } from '../utils/validators.js';
@@ -83,6 +86,32 @@ export const ReportZ = z.object({
 });
 
 export const EnvVarsZ = z.array(z.object({ key: z.string().min(1), value: z.string().max(4000).nullish() })).max(20);
+
+/* ---------- Trackers & email reports ---------- */
+
+const zBudget = z.number().min(0).max(1e12).nullish();
+const TrackerKindZ = z.enum(TRACKER_KINDS);
+
+export const TrackerZ = z.object({ name: zName, kind: TrackerKindZ, currency: zCurrency, monthlyBudget: zBudget });
+
+export const TrackerUpdateZ = z.object({
+  name: optional(zName),
+  kind: TrackerKindZ.nullish(),
+  currency: optional(zCurrency),
+  monthlyBudget: zBudget,
+});
+
+/** Owners are set when a tracker is created; people are shared as editors or viewers */
+export const MemberRoleZ = z.enum(MEMBER_ROLES, 'Pick Editor or Viewer');
+
+export const ShareZ = z.object({
+  email: z.email('must be a valid email').transform((v) => v.toLowerCase().trim()),
+  role: MemberRoleZ,
+});
+
+export const FrequenciesZ = z.array(z.enum(REPORT_FREQUENCIES)).max(REPORT_FREQUENCIES.length);
+
+export const EmailPeriodZ = z.enum(EMAIL_PERIODS, 'Pick a day, month, quarter or year');
 
 /* ---------- Portal: paging, logs, support, users ---------- */
 

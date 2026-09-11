@@ -2,15 +2,16 @@ import type { Types } from 'mongoose';
 import type { z } from 'zod';
 import type { UserFilterZ, UserUpdateZ } from '../graphql/inputs.js';
 import { AppLog } from '../models/AppLog.js';
-import { Category } from '../models/Category.js';
 import { ChatMessage } from '../models/ChatMessage.js';
-import { PaymentSource } from '../models/PaymentSource.js';
+import { ReportSchedule } from '../models/ReportSchedule.js';
 import { SupportTicket } from '../models/SupportTicket.js';
+import { Tracker } from '../models/Tracker.js';
 import { Transaction } from '../models/Transaction.js';
 import { User, type UserDoc } from '../models/User.js';
 import { badInput, notFound } from '../utils/errors.js';
 import { escapeRegex } from '../utils/validators.js';
 import { hashPassword } from './auth.js';
+import { purgeTrackers } from './trackers/index.js';
 
 type Counts = Map<string, number>;
 export interface UserCounts {
@@ -75,16 +76,20 @@ export async function resetPassword(id: string, password: string) {
   return true;
 }
 
-/** Removes the account and everything it owns. Logs are kept (with the email) for history. */
+/**
+ * Removes the account and the trackers it owns (with everything in them), and takes it off trackers
+ * shared with it. Entries it logged in other people's trackers stay (with its name); logs are kept.
+ */
 export async function deleteUser(admin: UserDoc, id: string) {
   const user = await findUser(id);
   if (user.id === admin.id) throw badInput("You can't delete your own account here");
   const userId = user._id;
+  const owned = await Tracker.find({ ownerId: userId });
+  await purgeTrackers(owned.map((t) => t._id));
   await Promise.all([
-    Transaction.deleteMany({ userId }),
-    Category.deleteMany({ userId }),
-    PaymentSource.deleteMany({ userId }),
+    Tracker.updateMany({ 'members.userId': userId }, { $pull: { members: { userId } } }),
     ChatMessage.deleteMany({ userId }),
+    ReportSchedule.deleteMany({ userId }),
     SupportTicket.deleteMany({ userId }),
     AppLog.updateMany({ userId }, { $set: { userId: null } }),
   ]);

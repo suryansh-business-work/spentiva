@@ -5,7 +5,7 @@ import type { Transaction, User } from '@/lib/types';
 export interface DaySection {
   key: string;
   title: string;
-  /** Net for the day in the user's currency (income − expense) */
+  /** Net for the day in the tracker's currency (income − expense) */
   net: number;
   data: Transaction[];
 }

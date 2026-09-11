@@ -14,6 +14,9 @@ Type **“spend 20 on food”** and it's logged. Ask **“top spending last mont
 
 ## Features
 
+- **Multiple trackers** – keep separate books such as _Home_ and _Business_. Each tracker has its own categories, payment modes, entries, chat, **currency** and **monthly budget**; a business tracker starts with business categories (rent, salaries, stock, GST…). Switch trackers from the pill at the top of Home, Budget, Reports, Spending and Chat.
+- **Sharing** – the owner shares a tracker with other Spentiva users by email as **Can edit** (add / change entries, categories, payment modes) or **View only**, changes roles or removes people; members can leave. Entries show who logged them.
+- **Email reports (MJML)** – Reports → ✉ / Profile → _Email reports_: turn on **daily, monthly, quarterly and yearly** report emails per tracker (sent in the morning of the user's time zone for the period that just ended; empty periods are skipped) or **send one now** for today / yesterday / this or last month, quarter or year. The email has income, spending, net, savings rate, change vs the previous period, budget, top categories, payment modes, month-by-month (longer periods) and the day's / largest entries.
 - **Chat logging** – natural language (English/Hinglish) parsed by OpenAI (`gpt-4o`, configurable): several entries per message, past days (“yesterday”), other currencies (“$15 on lunch”).
 - **Smart follow-ups** – if the _category_, _Expense On_ item or _Expense From_ (payment mode) isn't found or is ambiguous, the chat answers with **option chips** (pick one, or “+ New …” to create it). Every logged entry has **Undo**.
 - **Reports in chat & Reports tab** – by category, by item (Expense On), by payment mode, daily, monthly, top spending, averages, income vs expense (savings rate & ratio), rendered with **Chart.js**.
@@ -38,7 +41,7 @@ Admin accounts only (same login as the app). Responsive, so it works on a phone 
 | **Users**     | Search / filter / sort; per user: app build, last seen, entries, errors, tickets; edit name & role, disable / enable, reset password, delete with all data                                   |
 | **Logs**      | MUI table of every crash / error from the app, portal and API with filters (level, source, status, dates, search); details drawer with stack trace, device, occurrences, resolve all similar |
 | **Support**   | Requests from the app with status / priority; conversation view and reply (the user sees it in the app)                                                                                      |
-| **Settings**  | Display time zone + locale for the portal, OpenAI key & model, Slack token & build channel                                                                                                   |
+| **Settings**  | Display time zone + locale for the portal, OpenAI key & model, Slack token & build channel, **Email (SMTP)** for the report emails + send a test email                                       |
 
 Forms use react-hook-form + zod; limits come from the API's public `validationRules` query, so the app, portal and server validate the same way. Tables keep page, sort and filters in the URL.
 
@@ -46,7 +49,9 @@ Forms use react-hook-form + zod; limits come from the API's public `validationRu
 
 ```
 backend/src
-  models/            User, Category (+ Expense On items), PaymentSource, Transaction, ChatMessage, AppSetting
+  models/            User, Tracker (+ members), Category (+ Expense On items), PaymentSource, Transaction, ChatMessage, ReportSchedule, AppSetting
+  services/trackers/ access (owner / editor / viewer), sharing, delete, one-time migration of pre-tracker data into "Home"
+  services/email/    SMTP mailer, MJML templates (templates/), report data, schedules + the in-process scheduler
   services/ai.ts     OpenAI structured-output parser
   services/chat/     conversation flow: context, draft resolution, option handlers
   services/reports/  report builders (one per kind) + dashboard
@@ -136,6 +141,7 @@ Repository secrets are the **defaults for everything**; the `staging` / `product
 | `API_URL`                                                                                              | app build          | set – `https://spentiva.exyconn.com/graphql`                                        |
 | `SSH_HOST` · `SSH_USER` · `SSH_PRIVATE_KEY` (`SSH_PORT`)                                               | deploy             | set                                                                                 |
 | `SLACK_BOT_TOKEN` · `SLACK_CHANNEL_ID`                                                                 | builds → Slack     | optional defaults; the channel chosen in the app wins (read via `GET /ci/config`)   |
+| `SMTP_HOST` · `SMTP_PORT` · `SMTP_USER` · `SMTP_PASSWORD` · `SMTP_FROM`                                | report emails      | optional defaults; admins can set them in the portal → Settings → Email instead     |
 | `GDRIVE_FOLDER_ID` · `GDRIVE_CLIENT_ID` · `GDRIVE_CLIENT_SECRET` · `GDRIVE_REFRESH_TOKEN`              | builds → Drive     | OAuth client + refresh token with scope `https://www.googleapis.com/auth/drive`     |
 | `ANDROID_KEYSTORE_BASE64` · `ANDROID_KEYSTORE_PASSWORD` · `ANDROID_KEY_ALIAS` · `ANDROID_KEY_PASSWORD` | Play Store signing | optional – otherwise the debug key signs the APK (installable, not Play-uploadable) |
 | `IOS_P12_BASE64` · `IOS_P12_PASSWORD` · `IOS_PROVISION_PROFILE_BASE64`                                 | signed IPA         | optional – otherwise the IPA is **unsigned**                                        |

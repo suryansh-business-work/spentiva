@@ -1,11 +1,15 @@
+import type { Types } from 'mongoose';
 import type { UserDoc } from '../models/User.js';
 import type { CategoryDoc } from '../models/Category.js';
 import type { PaymentSourceDoc } from '../models/PaymentSource.js';
+import type { ReportScheduleDoc } from '../models/ReportSchedule.js';
+import type { TrackerDoc } from '../models/Tracker.js';
 import type { TransactionDoc } from '../models/Transaction.js';
 import type { ChatMessageDoc } from '../models/ChatMessage.js';
 import type { AppLogDoc } from '../models/AppLog.js';
 import type { SupportTicketDoc } from '../models/SupportTicket.js';
 import type { TicketUser } from '../services/support.js';
+import { roleOf, type Person } from '../services/trackers/index.js';
 import type { UserCounts } from '../services/users.js';
 
 const idOrNull = (v: unknown) => (v ? String(v) : null);
@@ -17,9 +21,40 @@ export const toUser = (u: UserDoc) => ({
   currency: u.currency,
   timezone: u.timezone,
   locale: u.locale,
-  monthlyBudget: u.monthlyBudget ?? null,
+  /** Deprecated: budgets belong to trackers */
+  monthlyBudget: null,
   isAdmin: u.role === 'ADMIN',
   createdAt: u.createdAt,
+});
+
+const someone = (id: string): Person => ({ id, name: 'Former member', email: '' });
+
+/** A tracker as seen by one user: their role, and the owner followed by everyone it is shared with */
+export function toTracker(t: TrackerDoc, viewerId: Types.ObjectId, people: Map<string, Person>, defaultId: string | null) {
+  const person = (id: Types.ObjectId) => people.get(String(id)) ?? someone(String(id));
+  const owner = person(t.ownerId);
+  return {
+    id: t.id as string,
+    name: t.name,
+    kind: t.kind,
+    currency: t.currency,
+    monthlyBudget: t.monthlyBudget ?? null,
+    role: roleOf(t, viewerId) ?? 'VIEWER',
+    isDefault: t.id === defaultId,
+    owner,
+    members: [
+      { user: owner, role: 'OWNER', addedAt: t.createdAt },
+      ...t.members.map((m) => ({ user: person(m.userId), role: m.role, addedAt: m.addedAt })),
+    ],
+    createdAt: t.createdAt,
+  };
+}
+
+export const toSchedule = (s: ReportScheduleDoc) => ({
+  frequency: s.frequency,
+  nextRunAt: s.nextRunAt,
+  lastSentAt: s.lastSentAt ?? null,
+  lastError: s.lastError ?? null,
 });
 
 export const toCategory = (c: CategoryDoc) => ({
@@ -55,6 +90,8 @@ export const toTransaction = (t: TransactionDoc) => ({
   note: t.note ?? null,
   occurredAt: t.occurredAt,
   via: t.via,
+  addedById: String(t.userId),
+  addedByName: t.userName ?? null,
   createdAt: t.createdAt,
 });
 

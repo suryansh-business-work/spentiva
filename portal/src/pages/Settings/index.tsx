@@ -10,6 +10,7 @@ import { API_URL, APP_VERSION } from '@/config';
 import { DisplayForm } from '@/forms/display';
 import { OpenAiForm } from '@/forms/openai';
 import { SlackForm } from '@/forms/slack';
+import { SmtpForm } from '@/forms/smtp';
 import { useEnvVars, useTimeZones } from '@/hooks/queries';
 
 function Section({ title, subtitle, children }: Readonly<{ title: string; subtitle: string; children: ReactNode }>) {
@@ -28,7 +29,7 @@ function Section({ title, subtitle, children }: Readonly<{ title: string; subtit
   );
 }
 
-/** Portal display preferences + app-wide environment (OpenAI, Slack) */
+/** Portal display preferences + app-wide environment (OpenAI, Slack, email) */
 export default function SettingsPage() {
   const env = useEnvVars();
   const zones = useTimeZones();
@@ -64,6 +65,11 @@ export default function SettingsPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <Section title="Slack" subtitle="New app builds are posted to this channel">
             <SlackForm token={vars.get('SLACK_BOT_TOKEN')} channelId={vars.get('SLACK_CHANNEL_ID')} channelName={vars.get('SLACK_CHANNEL_NAME')} />
+          </Section>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Section title="Email" subtitle="SMTP server for the daily, monthly, quarterly and yearly report emails users turn on in the app">
+            <SmtpForm vars={vars} />
           </Section>
         </Grid>
       </Grid>

@@ -3,6 +3,7 @@ import { FiPlus } from 'react-icons/fi';
 import { Text, XStack, YStack } from 'tamagui';
 import { ChartView } from '@/components/chart/ChartView';
 import { MonthPicker } from '@/components/MonthPicker';
+import { TrackerSwitcher } from '@/components/TrackerSwitcher';
 import { IconButton, Muted } from '@/components/ui';
 import { initials } from '@/lib/format';
 import type { Report, User } from '@/lib/types';
@@ -54,21 +55,26 @@ interface HomeHeroProps {
   month: string;
   onMonthChange: (month: string) => void;
   trend?: Report;
+  /** Viewers of a shared tracker can't add entries */
+  canAdd: boolean;
 }
 
 /** Lime header: greeting, month picker and the weekly income/expense bars (design reference) */
-export function HomeHero({ user, month, onMonthChange, trend }: Readonly<HomeHeroProps>) {
+export function HomeHero({ user, month, onMonthChange, trend, canAdd }: Readonly<HomeHeroProps>) {
   return (
     <YStack backgroundColor={C.lime} paddingHorizontal={16} paddingTop={6} paddingBottom={72} gap={12}>
       <XStack alignItems="center" justifyContent="space-between">
-        <YStack>
-          <Muted>Hello,</Muted>
-          <Text fontSize={20} fontWeight="800" color={C.ink}>
-            {user.name.split(' ')[0]}
-          </Text>
+        <YStack gap={8} flex={1}>
+          <XStack alignItems="baseline" gap={6}>
+            <Muted>Hello,</Muted>
+            <Text fontSize={20} fontWeight="800" color={C.ink} numberOfLines={1} flexShrink={1}>
+              {user.name.split(' ')[0]}
+            </Text>
+          </XStack>
+          <TrackerSwitcher bg={C.limeStrong} />
         </YStack>
         <XStack gap={8}>
-          <IconButton icon={FiPlus} label="Add transaction" onPress={() => router.push('/transaction')} />
+          {canAdd ? <IconButton icon={FiPlus} label="Add transaction" onPress={() => router.push('/transaction')} /> : null}
           <AvatarButton name={user.name} />
         </XStack>
       </XStack>

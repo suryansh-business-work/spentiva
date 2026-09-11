@@ -3,27 +3,26 @@ import { useForm } from 'react-hook-form';
 import { YStack } from 'tamagui';
 import { TextField } from '@/components/form';
 import { Btn, ErrorText, H2, Muted } from '@/components/ui';
-import { useUpdateProfile } from '@/hooks/mutations';
-import { useAuth } from '@/lib/auth';
+import { useUpdateTracker } from '@/hooks/trackerMutations';
 import { runAsync } from '@/lib/log';
 import { budgetDefaults, budgetSchema, toMonthlyBudget, type BudgetValues } from './budget.types';
 
 interface BudgetFormProps {
+  trackerId: string;
   currency: string;
   current: number | null;
   onDone: () => void;
 }
 
-/** Monthly budget amount (empty = track against income) */
-export function BudgetForm({ currency, current, onDone }: Readonly<BudgetFormProps>) {
-  const { setUser } = useAuth();
-  const update = useUpdateProfile(setUser);
+/** Monthly budget of a tracker (empty = track against income) */
+export function BudgetForm({ trackerId, currency, current, onDone }: Readonly<BudgetFormProps>) {
+  const update = useUpdateTracker();
   const { control, handleSubmit } = useForm<BudgetValues>({ resolver: zodResolver(budgetSchema), values: budgetDefaults(current) });
 
   const submit = runAsync(
     'budget',
     handleSubmit(async (v) => {
-      await update.mutateAsync({ monthlyBudget: toMonthlyBudget(v) });
+      await update.mutateAsync({ id: trackerId, input: { monthlyBudget: toMonthlyBudget(v) } });
       onDone();
     }),
   );

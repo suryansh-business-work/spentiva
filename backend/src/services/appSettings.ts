@@ -10,6 +10,11 @@ export const SETTING_DEFS = {
   SLACK_BOT_TOKEN: { label: 'Slack bot token', group: 'Slack', secret: true },
   SLACK_CHANNEL_ID: { label: 'Slack channel', group: 'Slack', secret: false },
   SLACK_CHANNEL_NAME: { label: 'Slack channel name', group: 'Slack', secret: false },
+  SMTP_HOST: { label: 'SMTP host', group: 'Email', secret: false },
+  SMTP_PORT: { label: 'SMTP port', group: 'Email', secret: false },
+  SMTP_USER: { label: 'SMTP username', group: 'Email', secret: false },
+  SMTP_PASSWORD: { label: 'SMTP password', group: 'Email', secret: true },
+  SMTP_FROM: { label: 'From address', group: 'Email', secret: false },
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFS;
@@ -20,6 +25,11 @@ const envFallback: Partial<Record<SettingKey, string | undefined>> = {
   OPENAI_MODEL: env.OPENAI_MODEL,
   SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN,
   SLACK_CHANNEL_ID: process.env.SLACK_CHANNEL_ID,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+  SMTP_FROM: process.env.SMTP_FROM,
 };
 
 const KEY = createHash('sha256')

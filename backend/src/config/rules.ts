@@ -13,6 +13,12 @@ export const RULES = {
   searchMax: 100,
 } as const;
 
+/** Trackers a user can own, and people one tracker can be shared with */
+export const TRACKER_LIMITS = { owned: 20, members: 20 } as const;
+
+/** Email reports go out at this hour of the recipient's local day (previous day / month / quarter / year) */
+export const REPORT_EMAIL_HOUR = 8;
+
 /** Client log limits (reportLogs is public, so every field is capped) */
 export const LOG_LIMITS = {
   batch: 20,

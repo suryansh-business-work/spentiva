@@ -1,6 +1,6 @@
 import { UpdateDisplayMutation } from '@/graphql/auth';
 import { DeleteLogsMutation, ResolveLogsMutation } from '@/graphql/logs';
-import { SetEnvVarsMutation, TestOpenAiMutation, TestSlackMutation } from '@/graphql/settings';
+import { SetEnvVarsMutation, TestEmailMutation, TestOpenAiMutation, TestSlackMutation } from '@/graphql/settings';
 import { ReplyTicketMutation, UpdateTicketMutation } from '@/graphql/support';
 import { DeleteUserMutation, ResetPasswordMutation, UpdateUserMutation } from '@/graphql/users';
 import { keys, useGqlMutation } from './gql';
@@ -18,4 +18,5 @@ export const useUpdateTicket = () => useGqlMutation(UpdateTicketMutation, [keys.
 export const useSaveEnvVars = () => useGqlMutation(SetEnvVarsMutation, [keys.env, keys.slack, keys.models]);
 export const useTestSlack = () => useGqlMutation(TestSlackMutation);
 export const useTestOpenAi = () => useGqlMutation(TestOpenAiMutation);
+export const useTestEmail = () => useGqlMutation(TestEmailMutation);
 export const useUpdateDisplay = () => useGqlMutation(UpdateDisplayMutation);

@@ -20,6 +20,8 @@ interface SelectSheetProps {
   value?: string | null;
   onSelect: (value: string) => void;
   searchable?: boolean;
+  /** Extra content under the list, e.g. a "Manage" button */
+  footer?: ReactNode;
 }
 
 function SelectRow({ item, selected, onPress }: Readonly<{ item: SelectItem; selected: boolean; onPress: () => void }>) {
@@ -53,7 +55,7 @@ function SelectRow({ item, selected, onPress }: Readonly<{ item: SelectItem; sel
 }
 
 /** Bottom-sheet list picker with optional search (currencies, time zones, months, channels…) */
-export function SelectSheet({ open, onOpenChange, title, items, value, onSelect, searchable }: Readonly<SelectSheetProps>) {
+export function SelectSheet({ open, onOpenChange, title, items, value, onSelect, searchable, footer }: Readonly<SelectSheetProps>) {
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -106,6 +108,7 @@ export function SelectSheet({ open, onOpenChange, title, items, value, onSelect,
               No matches
             </Text>
           ) : null}
+          {footer ? <YStack paddingTop={14}>{footer}</YStack> : null}
         </YStack>
       </Sheet.ScrollView>
     </AppSheet>

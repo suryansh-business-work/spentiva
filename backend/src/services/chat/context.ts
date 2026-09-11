@@ -3,13 +3,18 @@ import { format } from 'date-fns';
 import { Category, type CategoryDoc } from '../../models/Category.js';
 import type { ChatMessageDoc } from '../../models/ChatMessage.js';
 import { PaymentSource, type PaymentSourceDoc } from '../../models/PaymentSource.js';
+import type { TrackerDoc, TrackerRole } from '../../models/Tracker.js';
 import type { UserDoc } from '../../models/User.js';
 import type { ParseContext } from '../ai.js';
+import { canEdit } from '../trackers/access.js';
 
 export type TxType = 'EXPENSE' | 'INCOME';
 
+/** Who is chatting, in which tracker (entries, categories and payment modes come from it) */
 export interface Ctx {
   user: UserDoc;
+  tracker: TrackerDoc;
+  canEdit: boolean;
   categories: CategoryDoc[];
   sources: PaymentSourceDoc[];
 }
@@ -31,13 +36,15 @@ export const withIds = (list: Omit<Option, 'id'>[]): Option[] => list.map((o, i)
 
 export const CANCEL = option('CANCEL', 'Cancel');
 
-export async function loadCtx(user: UserDoc): Promise<Ctx> {
+export async function loadCtx(user: UserDoc, tracker: TrackerDoc, role: TrackerRole): Promise<Ctx> {
   const [categories, sources] = await Promise.all([
-    Category.find({ userId: user._id }).sort({ name: 1 }),
-    PaymentSource.find({ userId: user._id }).sort({ isDefault: -1, name: 1 }),
+    Category.find({ trackerId: tracker._id }).sort({ name: 1 }),
+    PaymentSource.find({ trackerId: tracker._id }).sort({ isDefault: -1, name: 1 }),
   ]);
-  return { user, categories, sources };
+  return { user, tracker, canEdit: canEdit(role), categories, sources };
 }
+
+export const viewOnlyText = (ctx: Ctx) => `You can view “${ctx.tracker.name}” but not add to it. Ask its owner for edit access.`;
 
 function categoriesOf(ctx: Ctx, type: TxType) {
   return ctx.categories.filter((c) => c.type === type).map((c) => ({ name: c.name, items: c.items.map((i) => i.name) }));
@@ -50,7 +57,7 @@ export function parseContext(ctx: Ctx, history: ChatMessageDoc[]): ParseContext 
     today: format(now, 'yyyy-MM-dd'),
     weekday: format(now, 'EEEE'),
     timezone: ctx.user.timezone,
-    currency: ctx.user.currency,
+    currency: ctx.tracker.currency,
     expenseCategories: categoriesOf(ctx, 'EXPENSE'),
     incomeCategories: categoriesOf(ctx, 'INCOME'),
     sources: ctx.sources.map((s) => ({ name: s.name, isDefault: s.isDefault })),
