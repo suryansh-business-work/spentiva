@@ -1,4 +1,15 @@
 {
+  "production": {
+    "version": "1.0.0",
+    "versionCode": 1000000,
+    "builtAt": "2026-09-11T05:37:35.646Z",
+    "dir": "production/v1.0.0",
+    "files": [
+      "Spentiva-v1.0.0-production.aab",
+      "Spentiva-v1.0.0-production.apk",
+      "Spentiva-v1.0.0-production.ipa"
+    ]
+  },
   "staging": {
     "version": "1.2.1",
     "versionCode": 1002001,
