@@ -1,0 +1,34 @@
+{
+  "app": "Spentiva",
+  "version": "1.2.2",
+  "versionCode": 1002002,
+  "channel": "production",
+  "tag": "v1.2.2",
+  "commit": "f00b1faf5f926173be3c62b849afc44ac58d4fa1",
+  "branch": "main",
+  "runUrl": "https://github.com/suryansh-business-work/spentiva/actions/runs/34874570437",
+  "builtAt": "2026-09-14T17:59:56.769Z",
+  "files": [
+    {
+      "file": "Spentiva-v1.2.2-production.aab",
+      "type": "aab",
+      "sizeMb": 39.74,
+      "sha256": "8888b033f1ad9eea32ad8bf1843bd6a625fc9c7ad28c48be34eb194d27a1977c",
+      "committed": true
+    },
+    {
+      "file": "Spentiva-v1.2.2-production.apk",
+      "type": "apk",
+      "sizeMb": 50,
+      "sha256": "98b91d67cbdf1d5ce3deb629f2accd8ca15f54be9a29abca663c25a3bf6313fa",
+      "committed": true
+    },
+    {
+      "file": "Spentiva-v1.2.2-production.ipa",
+      "type": "ipa",
+      "sizeMb": 10.8,
+      "sha256": "7330cb74aca254cedf93811a8763ac80291fd97dab4f58072ab9a1f603cbae6c",
+      "committed": true
+    }
+  ]
+}
