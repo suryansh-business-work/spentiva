@@ -5,7 +5,9 @@ export const badInput = (message: string) => new GraphQLError(message, { extensi
 
 export const notFound = (what: string) => new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
 
-export const unauthenticated = () => new GraphQLError('Please log in to continue', { extensions: { code: 'UNAUTHENTICATED' } });
+export const unauthenticated = (message = 'Please log in to continue') => new GraphQLError(message, { extensions: { code: 'UNAUTHENTICATED' } });
+
+export const forbidden = (message: string) => new GraphQLError(message, { extensions: { code: 'FORBIDDEN' } });
 
 /** Parse input with a zod schema and surface the first issue as a user-friendly GraphQL error */
 export function validate<T extends z.ZodType>(schema: T, input: unknown): z.infer<T> {

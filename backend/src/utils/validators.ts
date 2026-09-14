@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RULES } from '../config/rules.js';
 
 const ISO_CURRENCIES = new Set(Intl.supportedValuesOf('currency'));
 
@@ -31,7 +32,7 @@ export const zCurrency = z
   .refine(isCurrency, 'must be an ISO 4217 currency code');
 export const zTimeZone = z.string().trim().refine(isTimeZone, 'must be an IANA time zone');
 export const zLocale = z.string().trim().refine(isLocale, 'must be a BCP 47 locale');
-export const zName = z.string().trim().min(1, 'is required').max(60, 'is too long');
+export const zName = z.string().trim().min(1, 'is required').max(RULES.nameMax, 'is too long');
 export const zColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a hex color');
 export const zObjectId = z.string().regex(/^[a-f0-9]{24}$/i, 'is not a valid id');
 

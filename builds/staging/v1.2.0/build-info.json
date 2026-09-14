@@ -1,0 +1,34 @@
+{
+  "app": "Spentiva",
+  "version": "1.2.0",
+  "versionCode": 1002000,
+  "channel": "staging",
+  "tag": "v1.2.0-staging",
+  "commit": "3177e474d1ed9694ceb8b0df5feb63501b217a5a",
+  "branch": "staging",
+  "runUrl": "https://github.com/suryansh-business-work/spentiva/actions/runs/34606964374",
+  "builtAt": "2026-09-11T14:19:50.736Z",
+  "files": [
+    {
+      "file": "Spentiva-v1.2.0-staging.aab",
+      "type": "aab",
+      "sizeMb": 39.74,
+      "sha256": "eb9c9697aa77f1a2bdc4de5d05a7dee0be69b7ce6bc439508accfe489a39c4b1",
+      "committed": true
+    },
+    {
+      "file": "Spentiva-v1.2.0-staging.apk",
+      "type": "apk",
+      "sizeMb": 50,
+      "sha256": "621aa4228a632419b5f49d1af335070c97e1155af0c4bf920a005d900f7b3d45",
+      "committed": true
+    },
+    {
+      "file": "Spentiva-v1.2.0-staging.ipa",
+      "type": "ipa",
+      "sizeMb": 10.8,
+      "sha256": "5cc03dbbfab1628a05d978559e82c5f26faab84ab4555f617b34bf848372d105",
+      "committed": true
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ProfileInput } from '@/gql/graphql';
 import type { User } from '@/lib/types';
-import { toOptionalAmount, zCurrencyCode, zOptionalAmount, zPersonName } from '../validators';
+import { zCurrencyCode, zPersonName } from '../validators';
 
 export const preferencesSchema = z.object({
   name: zPersonName,
@@ -11,7 +11,6 @@ export const preferencesSchema = z.object({
     .string()
     .trim()
     .regex(/^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/, 'Use a BCP 47 locale like en-IN'),
-  monthlyBudget: zOptionalAmount,
 });
 
 export type PreferencesValues = z.infer<typeof preferencesSchema>;
@@ -21,7 +20,6 @@ export const preferencesDefaults = (u: User): PreferencesValues => ({
   currency: u.currency,
   timezone: u.timezone,
   locale: u.locale,
-  monthlyBudget: u.monthlyBudget ? String(u.monthlyBudget) : '',
 });
 
 export const toProfileInput = (v: PreferencesValues): ProfileInput => ({
@@ -29,5 +27,4 @@ export const toProfileInput = (v: PreferencesValues): ProfileInput => ({
   currency: v.currency,
   timezone: v.timezone,
   locale: v.locale,
-  monthlyBudget: toOptionalAmount(v.monthlyBudget),
 });

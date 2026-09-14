@@ -2,13 +2,13 @@ import { useState } from 'react';
 import type { Control } from 'react-hook-form';
 import { FiPlus } from 'react-icons/fi';
 import { Input, XStack, YStack } from 'tamagui';
+import { ChipsField } from '@/components/form';
 import { ErrorText, IconButton } from '@/components/ui';
 import { useAddExpenseOn } from '@/hooks/mutations';
 import { runAsync } from '@/lib/log';
 import type { Category } from '@/lib/types';
 import { C } from '@/theme/colors';
 import type { TransactionValues } from '../transaction.types';
-import { ChipsField } from './ChipsField';
 
 interface ExpenseOnFieldProps {
   control: Control<TransactionValues>;

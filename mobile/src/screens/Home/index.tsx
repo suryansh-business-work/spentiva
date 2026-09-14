@@ -7,6 +7,7 @@ import { TransactionRow } from '@/components/TransactionRow';
 import { Card, EmptyState, ErrorState, Loading, SectionTitle } from '@/components/ui';
 import { useCategoryMap, useDashboard } from '@/hooks/queries';
 import { useUser } from '@/lib/auth';
+import { canEdit, useTracker } from '@/lib/tracker';
 import { currentMonth } from '@/lib/format';
 import { runAsync } from '@/lib/log';
 import type { Dashboard, User } from '@/lib/types';
@@ -80,6 +81,7 @@ function HomeContent({ data, loading, error, retry, user, month }: Readonly<Cont
 /** Home dashboard (design: "My Budget") */
 export default function HomeScreen() {
   const user = useUser();
+  const tracker = useTracker();
   const [month, setMonth] = useState(() => currentMonth(user.timezone));
   const { data, isLoading, error, refetch, isRefetching } = useDashboard(month);
   const retry = runAsync('home', refetch);
@@ -92,7 +94,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={retry} tintColor={C.green} colors={[C.green]} />}
       >
-        <HomeHero user={user} month={month} onMonthChange={setMonth} trend={data?.trend} />
+        <HomeHero user={user} month={month} onMonthChange={setMonth} trend={data?.trend} canAdd={canEdit(tracker.role)} />
         <YStack paddingHorizontal={16} marginTop={-58} gap={14}>
           <HomeContent data={data} loading={isLoading} error={error} retry={retry} user={user} month={month} />
         </YStack>

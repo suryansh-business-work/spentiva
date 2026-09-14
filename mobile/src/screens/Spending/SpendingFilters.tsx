@@ -3,6 +3,7 @@ import { FiPlus, FiSearch } from 'react-icons/fi';
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '@/components/Icon';
 import { MonthPicker } from '@/components/MonthPicker';
+import { TrackerSwitcher } from '@/components/TrackerSwitcher';
 import { IconButton, Segmented, Title } from '@/components/ui';
 import { useDashboard } from '@/hooks/queries';
 import { money } from '@/lib/format';
@@ -49,15 +50,17 @@ interface SpendingFiltersProps {
   onType: (t: TypeFilter) => void;
   search: string;
   onSearch: (s: string) => void;
+  canAdd: boolean;
 }
 
-export function SpendingFilters({ user, month, onMonth, type, onType, search, onSearch }: Readonly<SpendingFiltersProps>) {
+export function SpendingFilters({ user, month, onMonth, type, onType, search, onSearch, canAdd }: Readonly<SpendingFiltersProps>) {
   return (
     <YStack paddingHorizontal={16} paddingTop={6} gap={12}>
       <XStack alignItems="center" justifyContent="space-between">
         <Title>Spending</Title>
-        <IconButton icon={FiPlus} onPress={() => router.push('/transaction')} label="Add transaction" />
+        {canAdd ? <IconButton icon={FiPlus} onPress={() => router.push('/transaction')} label="Add transaction" /> : null}
       </XStack>
+      <TrackerSwitcher />
       <MonthPicker value={month} onChange={onMonth} settings={user} />
       <MonthTotals month={month} user={user} />
       <XStack alignItems="center" backgroundColor={C.white} borderRadius={16} paddingHorizontal={14} gap={8} borderWidth={1} borderColor={C.line}>

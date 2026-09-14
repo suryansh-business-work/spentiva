@@ -37,8 +37,8 @@ export const ChangePasswordMutation = graphql(`
 `);
 
 export const CreateCategoryMutation = graphql(`
-  mutation CreateCategory($input: CategoryInput!) {
-    createCategory(input: $input) {
+  mutation CreateCategory($trackerId: ID, $input: CategoryInput!) {
+    createCategory(trackerId: $trackerId, input: $input) {
       ...CategoryFields
     }
   }
@@ -83,8 +83,8 @@ export const RemoveExpenseOnMutation = graphql(`
 `);
 
 export const CreateSourceMutation = graphql(`
-  mutation CreateSource($input: PaymentSourceInput!) {
-    createPaymentSource(input: $input) {
+  mutation CreateSource($trackerId: ID, $input: PaymentSourceInput!) {
+    createPaymentSource(trackerId: $trackerId, input: $input) {
       ...SourceFields
     }
   }
@@ -105,8 +105,8 @@ export const DeleteSourceMutation = graphql(`
 `);
 
 export const CreateTxMutation = graphql(`
-  mutation CreateTx($input: TransactionInput!) {
-    createTransaction(input: $input) {
+  mutation CreateTx($trackerId: ID, $input: TransactionInput!) {
+    createTransaction(trackerId: $trackerId, input: $input) {
       ...TxFields
     }
   }
@@ -127,8 +127,8 @@ export const DeleteTxMutation = graphql(`
 `);
 
 export const SendChatMutation = graphql(`
-  mutation SendChat($text: String!) {
-    sendChatMessage(text: $text) {
+  mutation SendChat($trackerId: ID, $text: String!) {
+    sendChatMessage(trackerId: $trackerId, text: $text) {
       ...ChatFields
     }
   }
@@ -143,8 +143,8 @@ export const ChooseOptionMutation = graphql(`
 `);
 
 export const ClearChatMutation = graphql(`
-  mutation ClearChat {
-    clearChat
+  mutation ClearChat($trackerId: ID) {
+    clearChat(trackerId: $trackerId)
   }
 `);
 

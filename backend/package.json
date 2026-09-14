@@ -1,6 +1,6 @@
 {
   "name": "spentiva-backend",
-  "version": "1.0.0",
+  "version": "1.2.2",
   "private": true,
   "description": "Spentiva GraphQL API (Node + TypeScript + MongoDB Atlas + OpenAI)",
   "type": "module",
@@ -25,14 +25,18 @@
     "graphql": "^16.14.2",
     "graphql-yoga": "^5.22.0",
     "jsonwebtoken": "^9.0.3",
+    "mjml": "^5.4.1",
     "mongoose": "^9.10.0",
+    "nodemailer": "^10.0.6",
     "openai": "^7.15.0",
     "zod": "^4.6.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/mjml": "^5.0.0",
     "@types/node": "^22.20.2",
+    "@types/nodemailer": "^8.0.1",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.6",

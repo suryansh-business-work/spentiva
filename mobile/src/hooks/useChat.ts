@@ -4,6 +4,7 @@ import { gql } from '@/lib/api';
 import { logError } from '@/lib/log';
 import type { ChatMessage } from '@/lib/types';
 import { keys, useInvalidateMoney } from './keys';
+import { useTrackerId } from './queries';
 
 const CHAT_TIMEOUT_MS = 45_000;
 
@@ -23,13 +24,15 @@ function pendingMessage(text: string): ChatMessage {
   };
 }
 
-/** Send / choose / clear — results are merged into the cached history by id */
+/** Send / choose / clear in the active tracker's conversation — results are merged into the cached history by id */
 export function useChat() {
   const qc = useQueryClient();
   const invalidateMoney = useInvalidateMoney();
+  const trackerId = useTrackerId();
+  const chatKey = keys.chat(trackerId);
 
   const merge = (incoming: ChatMessage[], dropPending = false) =>
-    qc.setQueryData<ChatMessage[]>(keys.chat, (prev = []) => {
+    qc.setQueryData<ChatMessage[]>(chatKey, (prev = []) => {
       const base = dropPending ? prev.filter((m) => !m.pending) : prev;
       const byId = new Map(base.map((m) => [m.id, m]));
       for (const m of incoming) byId.set(m.id, m);
@@ -41,13 +44,13 @@ export function useChat() {
   const refreshAfter = (messages: ChatMessage[]) => {
     if (messages.some((m) => m.kind === 'TRANSACTION' || m.resolved)) invalidateMoney().catch(logError('chat'));
     if (messages.some((m) => m.kind === 'OPTIONS' || m.kind === 'TRANSACTION')) {
-      qc.invalidateQueries({ queryKey: keys.categories }).catch(logError('chat'));
-      qc.invalidateQueries({ queryKey: keys.sources }).catch(logError('chat'));
+      qc.invalidateQueries({ queryKey: keys.categories(trackerId) }).catch(logError('chat'));
+      qc.invalidateQueries({ queryKey: keys.sources(trackerId) }).catch(logError('chat'));
     }
   };
 
   const send = useMutation({
-    mutationFn: (text: string) => gql(SendChatMutation, { text }, CHAT_TIMEOUT_MS).then((d) => d.sendChatMessage),
+    mutationFn: (text: string) => gql(SendChatMutation, { trackerId, text }, CHAT_TIMEOUT_MS).then((d) => d.sendChatMessage),
     onMutate: (text) => {
       merge([pendingMessage(text)]);
     },
@@ -55,7 +58,7 @@ export function useChat() {
       merge(messages, true);
       refreshAfter(messages);
     },
-    onError: () => qc.setQueryData<ChatMessage[]>(keys.chat, (prev = []) => prev.filter((m) => !m.pending)),
+    onError: () => qc.setQueryData<ChatMessage[]>(chatKey, (prev = []) => prev.filter((m) => !m.pending)),
   });
 
   const choose = useMutation({
@@ -67,8 +70,8 @@ export function useChat() {
   });
 
   const clear = useMutation({
-    mutationFn: () => gql(ClearChatMutation),
-    onSuccess: () => qc.setQueryData(keys.chat, []),
+    mutationFn: () => gql(ClearChatMutation, { trackerId }),
+    onSuccess: () => qc.setQueryData(chatKey, []),
   });
 
   return { send, choose, clear };

@@ -1,14 +1,15 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { FiCpu, FiCreditCard, FiGrid, FiLock, FiLogOut, FiServer, FiSliders } from 'react-icons/fi';
+import { FiCpu, FiCreditCard, FiGrid, FiLayers, FiLifeBuoy, FiLock, FiLogOut, FiMail, FiServer, FiSliders } from 'react-icons/fi';
 import { Text, XStack, YStack } from 'tamagui';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { Card, Divider, ListRow, Muted, Screen, Tiny, Title } from '@/components/ui';
 import { useCategories, useSources } from '@/hooks/queries';
 import { getApiUrl } from '@/lib/api';
 import { useAuth, useUser } from '@/lib/auth';
-import { initials, money } from '@/lib/format';
+import { initials } from '@/lib/format';
 import { runAsync } from '@/lib/log';
+import { useTrackers } from '@/lib/tracker';
 import type { User } from '@/lib/types';
 import { C } from '@/theme/colors';
 
@@ -44,11 +45,12 @@ function ProfileCard({ user }: Readonly<{ user: User }>) {
 export default function ProfileScreen() {
   const user = useUser();
   const { signOut } = useAuth();
+  const { trackers, tracker } = useTrackers();
   const confirm = useConfirm();
   const { data: categories } = useCategories();
   const { data: sources } = useSources();
   const itemCount = (categories ?? []).reduce((n, c) => n + c.items.length, 0);
-  const budget = user.monthlyBudget ? ` · Budget ${money(user.monthlyBudget, user.currency, user.locale)}` : '';
+  const trackerName = tracker?.name ?? '';
   const build = Constants.expoConfig?.android?.versionCode ?? Constants.expoConfig?.ios?.buildNumber;
 
   const logout = runAsync('profile', async () => {
@@ -61,16 +63,33 @@ export default function ProfileScreen() {
       <ProfileCard user={user} />
       <Card gap={0} paddingVertical={6}>
         <ListRow
-          icon={FiSliders}
-          title="Preferences"
-          subtitle={`${user.currency} · ${user.timezone}${budget}`}
-          onPress={() => router.push('/settings/preferences')}
+          icon={FiLayers}
+          iconColor="#0D9488"
+          title="Trackers"
+          subtitle={trackers.map((t) => t.name).join(' · ')}
+          onPress={() => router.push('/settings/trackers')}
         />
         <Divider />
         <ListRow
+          icon={FiMail}
+          iconColor="#F97316"
+          title="Email reports"
+          subtitle="Daily, monthly, quarterly & yearly summaries"
+          onPress={() => router.push('/settings/email-reports')}
+        />
+        <Divider />
+        <ListRow
+          icon={FiSliders}
+          title="Preferences"
+          subtitle={`${user.timezone} · ${user.locale}`}
+          onPress={() => router.push('/settings/preferences')}
+        />
+      </Card>
+      <Card gap={0} paddingVertical={6}>
+        <ListRow
           icon={FiGrid}
           iconColor="#F2B705"
-          title="Categories & Expense On"
+          title={`Categories · ${trackerName}`}
           subtitle={categories ? `${categories.length} categories · ${itemCount} items` : 'Expense and income categories'}
           onPress={() => router.push('/settings/categories')}
         />
@@ -78,7 +97,7 @@ export default function ProfileScreen() {
         <ListRow
           icon={FiCreditCard}
           iconColor="#3B82F6"
-          title="Expense From (payment modes)"
+          title={`Payment modes · ${trackerName}`}
           subtitle={sources?.map((s) => s.name).join(', ') ?? 'Cards, UPI, cash…'}
           onPress={() => router.push('/settings/sources')}
         />
@@ -94,6 +113,14 @@ export default function ProfileScreen() {
           />
         </Card>
       ) : null}
+      <Card gap={0} paddingVertical={6}>
+        <ListRow
+          icon={FiLifeBuoy}
+          title="Help & support"
+          subtitle="Report a problem or ask a question"
+          onPress={() => router.push('/settings/support')}
+        />
+      </Card>
       <Card gap={0} paddingVertical={6}>
         <ListRow icon={FiLock} iconColor={C.sub} title="Change password" onPress={() => router.push('/settings/password')} />
         <Divider />

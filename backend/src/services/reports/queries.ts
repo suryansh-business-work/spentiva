@@ -1,10 +1,9 @@
 import { Types, type PipelineStage } from 'mongoose';
 import { Category } from '../../models/Category.js';
 import { Transaction } from '../../models/Transaction.js';
-import type { UserDoc } from '../../models/User.js';
 import { round2 } from '../../utils/validators.js';
 import { periodRange, monthRange, type Range } from '../../utils/time.js';
-import { PALETTE, type Dataset, type ReportParams, type Stat, type StatFormat, type TxType } from './types.js';
+import { PALETTE, type Dataset, type ReportParams, type ReportScope, type Stat, type StatFormat, type TxType } from './types.js';
 
 export const paletteColor = (i: number) => PALETTE[i % PALETTE.length] ?? '#5DA314';
 export const pct = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
@@ -25,23 +24,23 @@ export const dataset = (label: string, data: number[], color: string | null = nu
 });
 
 /** Explicit from/to → calendar month → named period (MONTHLY defaults to the last 6 months) */
-export function resolveRange(user: UserDoc, p: Pick<ReportParams, 'period' | 'month' | 'from' | 'to' | 'kind'>): Range {
+export function resolveRange(scope: ReportScope, p: Pick<ReportParams, 'period' | 'month' | 'from' | 'to' | 'kind'>): Range {
   if (p.from && p.to && p.to > p.from) return { from: p.from, to: p.to };
-  const month = p.month ? monthRange(p.month, user.timezone) : null;
+  const month = p.month ? monthRange(p.month, scope.timezone) : null;
   if (month) return month;
-  return periodRange(p.period ?? (p.kind === 'MONTHLY' ? 'LAST_6_MONTHS' : 'THIS_MONTH'), user.timezone);
+  return periodRange(p.period ?? (p.kind === 'MONTHLY' ? 'LAST_6_MONTHS' : 'THIS_MONTH'), scope.timezone);
 }
 
-export function match(user: UserDoc, range: Range, type?: TxType | null, categoryId?: string | null) {
-  const m: Record<string, unknown> = { userId: user._id, occurredAt: { $gte: range.from, $lt: range.to } };
+export function match(scope: ReportScope, range: Range, type?: TxType | null, categoryId?: string | null) {
+  const m: Record<string, unknown> = { trackerId: scope.trackerId, occurredAt: { $gte: range.from, $lt: range.to } };
   if (type) m.type = type;
   if (categoryId && Types.ObjectId.isValid(categoryId)) m.categoryId = new Types.ObjectId(categoryId);
   return m;
 }
 
-export async function totalsByType(user: UserDoc, range: Range) {
+export async function totalsByType(scope: ReportScope, range: Range) {
   const rows = await Transaction.aggregate<{ _id: TxType; total: number; count: number }>([
-    { $match: match(user, range) },
+    { $match: match(scope, range) },
     { $group: { _id: '$type', total: { $sum: '$amountBase' }, count: { $sum: 1 } } },
   ]);
   const income = rows.find((r) => r._id === 'INCOME');
@@ -59,9 +58,9 @@ export interface CategorySlice {
 }
 
 /** Totals per category (sorted desc) with the category's colour/icon */
-export async function categoryRows(user: UserDoc, range: Range, type: TxType): Promise<CategorySlice[]> {
+export async function categoryRows(scope: ReportScope, range: Range, type: TxType): Promise<CategorySlice[]> {
   const rows = await Transaction.aggregate<{ _id: Types.ObjectId | null; name: string; total: number; count: number }>([
-    { $match: match(user, range, type) },
+    { $match: match(scope, range, type) },
     { $group: { _id: '$categoryId', name: { $last: '$categoryName' }, total: { $sum: '$amountBase' }, count: { $sum: 1 } } },
     { $sort: { total: -1 } },
   ]);
@@ -81,21 +80,21 @@ export async function categoryRows(user: UserDoc, range: Range, type: TxType): P
 }
 
 /** Totals grouped by a string field (e.g. sourceName / expenseOnName) */
-export function groupedBy(user: UserDoc, range: Range, field: string, type: TxType, categoryId?: string | null) {
+export function groupedBy(scope: ReportScope, range: Range, field: string, type: TxType, categoryId?: string | null) {
   return Transaction.aggregate<{ _id: string; total: number; count: number }>([
-    { $match: match(user, range, type, categoryId) },
+    { $match: match(scope, range, type, categoryId) },
     { $group: { _id: { $ifNull: [`$${field}`, 'Unspecified'] }, total: { $sum: '$amountBase' }, count: { $sum: 1 } } },
     { $sort: { total: -1 } },
   ]);
 }
 
-/** Day (%Y-%m-%d) or month (%Y-%m) buckets in the user's time zone → lookup(key, type) */
-export async function bucketed(user: UserDoc, range: Range, format: '%Y-%m-%d' | '%Y-%m', type?: TxType | null) {
+/** Day (%Y-%m-%d) or month (%Y-%m) buckets in the viewer's time zone → lookup(key, type) */
+export async function bucketed(scope: ReportScope, range: Range, format: '%Y-%m-%d' | '%Y-%m', type?: TxType | null) {
   const pipeline: PipelineStage[] = [
-    { $match: match(user, range, type) },
+    { $match: match(scope, range, type) },
     {
       $group: {
-        _id: { key: { $dateToString: { format, date: '$occurredAt', timezone: user.timezone } }, type: '$type' },
+        _id: { key: { $dateToString: { format, date: '$occurredAt', timezone: scope.timezone } }, type: '$type' },
         total: { $sum: '$amountBase' },
       },
     },

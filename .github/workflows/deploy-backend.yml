@@ -34,6 +34,12 @@ jobs:
       OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || vars.OPENAI_MODEL || 'gpt-4o' }}
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+      # Email reports (optional here: admins can also set SMTP in the portal → Settings → Email)
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SMTP_FROM: ${{ secrets.SMTP_FROM || vars.SMTP_FROM }}
       CI_TOKEN: ${{ secrets.CI_TOKEN }}
       SETTINGS_SECRET: ${{ secrets.SETTINGS_SECRET }}
       ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
@@ -41,6 +47,9 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: App version (shown on /healthz and on API error logs)
+        run: echo "APP_VERSION=$(node -p "require('./backend/package.json').version")" >> "$GITHUB_ENV"
 
       - name: Check configuration
         id: config
@@ -84,7 +93,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: IMAGE,TAG,GHCR_USER,GHCR_TOKEN,API_PORT,CONTAINER,MONGODB_URI,JWT_SECRET,OPENAI_API_KEY,OPENAI_MODEL,SLACK_BOT_TOKEN,SLACK_CHANNEL_ID,CI_TOKEN,SETTINGS_SECRET,ADMIN_EMAILS,CORS_ORIGIN
+          envs: IMAGE,TAG,GHCR_USER,GHCR_TOKEN,API_PORT,CONTAINER,MONGODB_URI,JWT_SECRET,OPENAI_API_KEY,OPENAI_MODEL,SLACK_BOT_TOKEN,SLACK_CHANNEL_ID,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,CI_TOKEN,SETTINGS_SECRET,ADMIN_EMAILS,CORS_ORIGIN,APP_VERSION
           script: |
             set -e
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
@@ -96,7 +105,8 @@ jobs:
               -e NODE_ENV=production -e PORT=4000 \
               -e MONGODB_URI -e JWT_SECRET -e OPENAI_API_KEY -e OPENAI_MODEL \
               -e SLACK_BOT_TOKEN -e SLACK_CHANNEL_ID -e CI_TOKEN -e SETTINGS_SECRET \
-              -e ADMIN_EMAILS -e CORS_ORIGIN \
+              -e SMTP_HOST -e SMTP_PORT -e SMTP_USER -e SMTP_PASSWORD -e SMTP_FROM \
+              -e ADMIN_EMAILS -e CORS_ORIGIN -e APP_VERSION \
               "$IMAGE:$TAG"
             for i in $(seq 1 30); do
               if curl -fsS "http://127.0.0.1:$API_PORT/healthz" >/dev/null; then echo "API healthy"; break; fi

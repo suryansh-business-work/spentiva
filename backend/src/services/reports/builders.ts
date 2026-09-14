@@ -8,8 +8,8 @@ const lineName = (t: TxType) => (t === 'INCOME' ? 'Income' : 'Expense');
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-async function byCategory({ user, range, type, base }: BuildCtx): Promise<Report> {
-  const rows = await categoryRows(user, range, type);
+async function byCategory({ scope, range, type, base }: BuildCtx): Promise<Report> {
+  const rows = await categoryRows(scope, range, type);
   return {
     ...base,
     title: `${typeLabel(type)} by category`,
@@ -35,8 +35,8 @@ async function byCategory({ user, range, type, base }: BuildCtx): Promise<Report
 
 function byField(field: 'sourceName' | 'expenseOnName') {
   const isSource = field === 'sourceName';
-  return async ({ user, range, type, params, base }: BuildCtx): Promise<Report> => {
-    const rows = await groupedBy(user, range, field, type, params.categoryId);
+  return async ({ scope, range, type, params, base }: BuildCtx): Promise<Report> => {
+    const rows = await groupedBy(scope, range, field, type, params.categoryId);
     return {
       ...base,
       title: isSource ? `${typeLabel(type)} by payment mode` : `${typeLabel(type)} by item`,
@@ -62,9 +62,9 @@ function byField(field: 'sourceName' | 'expenseOnName') {
 
 /** Daily or monthly buckets; both income & expense unless a type was asked for */
 function trend(unit: 'day' | 'month') {
-  return async ({ user, range, type, params, base }: BuildCtx): Promise<Report> => {
-    const keys = unit === 'day' ? dayKeys(range, user.timezone) : monthKeys(range, user.timezone);
-    const value = await bucketed(user, range, unit === 'day' ? '%Y-%m-%d' : '%Y-%m', params.type ?? null);
+  return async ({ scope, range, type, params, base }: BuildCtx): Promise<Report> => {
+    const keys = unit === 'day' ? dayKeys(range, scope.timezone) : monthKeys(range, scope.timezone);
+    const value = await bucketed(scope, range, unit === 'day' ? '%Y-%m-%d' : '%Y-%m', params.type ?? null);
     const types: TxType[] = params.type ? [params.type] : ['INCOME', 'EXPENSE'];
     const datasets = types.map((t) =>
       dataset(
@@ -97,10 +97,10 @@ function trend(unit: 'day' | 'month') {
   };
 }
 
-async function top({ user, range, type, params, base }: BuildCtx): Promise<Report> {
+async function top({ scope, range, type, params, base }: BuildCtx): Promise<Report> {
   const limit = Math.min(Math.max(params.limit ?? 5, 1), 20);
-  const rows = (await categoryRows(user, range, type)).slice(0, limit);
-  const biggest = await Transaction.findOne(match(user, range, type)).sort({ amountBase: -1 });
+  const rows = (await categoryRows(scope, range, type)).slice(0, limit);
+  const biggest = await Transaction.findOne(match(scope, range, type)).sort({ amountBase: -1 });
   const biggestLabel = biggest ? [biggest.categoryName, biggest.expenseOnName ?? biggest.note].filter(Boolean).join(' · ') : null;
   return {
     ...base,
@@ -134,12 +134,12 @@ function weekdayCounts(keys: string[]): number[] {
   return counts;
 }
 
-async function average({ user, range, type, params, base }: BuildCtx): Promise<Report> {
+async function average({ scope, range, type, params, base }: BuildCtx): Promise<Report> {
   const rows = await Transaction.aggregate<{ _id: number; total: number; count: number }>([
-    { $match: match(user, range, type, params.categoryId) },
-    { $group: { _id: { $isoDayOfWeek: { date: '$occurredAt', timezone: user.timezone } }, total: { $sum: '$amountBase' }, count: { $sum: 1 } } },
+    { $match: match(scope, range, type, params.categoryId) },
+    { $group: { _id: { $isoDayOfWeek: { date: '$occurredAt', timezone: scope.timezone } }, total: { $sum: '$amountBase' }, count: { $sum: 1 } } },
   ]);
-  const counts = weekdayCounts(dayKeys({ from: range.from, to: new Date(Math.min(range.to.getTime(), Date.now() + 1)) }, user.timezone));
+  const counts = weekdayCounts(dayKeys({ from: range.from, to: new Date(Math.min(range.to.getTime(), Date.now() + 1)) }, scope.timezone));
   const perWeekday = WEEKDAYS.map((_, i) => (rows.find((r) => r._id === i + 1)?.total ?? 0) / Math.max(1, counts[i] ?? 0));
   const total = sum(rows.map((r) => r.total));
   const count = sum(rows.map((r) => r.count));
@@ -160,12 +160,12 @@ async function average({ user, range, type, params, base }: BuildCtx): Promise<R
   };
 }
 
-async function incomeVsExpense({ user, range, base }: BuildCtx): Promise<Report> {
-  const { income, expense } = await totalsByType(user, range);
-  const months = monthKeys(range, user.timezone);
+async function incomeVsExpense({ scope, range, base }: BuildCtx): Promise<Report> {
+  const { income, expense } = await totalsByType(scope, range);
+  const months = monthKeys(range, scope.timezone);
   const monthly = months.length > 1;
-  const keys = monthly ? months : dayKeys(range, user.timezone);
-  const value = await bucketed(user, range, monthly ? '%Y-%m' : '%Y-%m-%d', null);
+  const keys = monthly ? months : dayKeys(range, scope.timezone);
+  const value = await bucketed(scope, range, monthly ? '%Y-%m' : '%Y-%m-%d', null);
   return {
     ...base,
     title: 'Income vs expense',

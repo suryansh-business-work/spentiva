@@ -6,13 +6,17 @@ Type **“spend 20 on food”** and it's logged. Ask **“top spending last mont
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Mobile**  | Expo SDK 57 · React Native 0.86 · Expo Router · Tamagui v2 · react-hook-form + zod · GraphQL Code Generator · TanStack Query · Chart.js (WebView) · react-icons (via react-native-svg) · date-fns |
 | **Backend** | Node 22 · TypeScript · GraphQL (graphql-yoga) · MongoDB Atlas (mongoose) · OpenAI **gpt-4o** structured outputs · zod                                                                             |
-| **Deploy**  | Docker image (GHCR) → VPS over SSH → nginx + Let's Encrypt at **https://spentiva.exyconn.com/graphql**                                                                                            |
+| **Portal**  | React 19 · TypeScript · Vite · MUI 9 + MUI X (date pickers, charts) · React Router · TanStack Query · react-hook-form + zod · GraphQL Code Generator · date-fns                                   |
+| **Deploy**  | Docker images (GHCR) → VPS over SSH → nginx + Let's Encrypt: API **https://spentiva.exyconn.com/graphql**, portal **https://spentiva.portal.exyconn.com**                                         |
 | **CI/CD**   | GitHub Actions → semantic version → APK + AAB + IPA → `builds/`, GitHub Release, Google Drive, Slack                                                                                              |
 
 ---
 
 ## Features
 
+- **Multiple trackers** – keep separate books such as _Home_ and _Business_. Each tracker has its own categories, payment modes, entries, chat, **currency** and **monthly budget**; a business tracker starts with business categories (rent, salaries, stock, GST…). Switch trackers from the pill at the top of Home, Budget, Reports, Spending and Chat.
+- **Sharing** – the owner shares a tracker with other Spentiva users by email as **Can edit** (add / change entries, categories, payment modes) or **View only**, changes roles or removes people; members can leave. Entries show who logged them.
+- **Email reports (MJML)** – Reports → ✉ / Profile → _Email reports_: turn on **daily, monthly, quarterly and yearly** report emails per tracker (sent in the morning of the user's time zone for the period that just ended; empty periods are skipped) or **send one now** for today / yesterday / this or last month, quarter or year. The email has income, spending, net, savings rate, change vs the previous period, budget, top categories, payment modes, month-by-month (longer periods) and the day's / largest entries.
 - **Chat logging** – natural language (English/Hinglish) parsed by OpenAI (`gpt-4o`, configurable): several entries per message, past days (“yesterday”), other currencies (“$15 on lunch”).
 - **Smart follow-ups** – if the _category_, _Expense On_ item or _Expense From_ (payment mode) isn't found or is ambiguous, the chat answers with **option chips** (pick one, or “+ New …” to create it). Every logged entry has **Undo**.
 - **Reports in chat & Reports tab** – by category, by item (Expense On), by payment mode, daily, monthly, top spending, averages, income vs expense (savings rate & ratio), rendered with **Chart.js**.
@@ -24,16 +28,40 @@ Type **“spend 20 on food”** and it's logged. Ask **“top spending last mont
 - **Time zones (IANA) & locale (BCP 47)** – days/months are bucketed in the user's zone; dates and numbers are formatted from the user's Preferences; timestamps travel as **ISO 8601** UTC.
 - **Auth** – email + password (bcrypt, JWT). The **first user is the admin** (or list emails in `ADMIN_EMAILS`).
 - **Profile → Environment variables** (admins) – OpenAI API key & model, Slack bot token & **channel picker** (new builds are posted there). Stored AES-256-GCM encrypted, shown masked; anything not set in the app falls back to the server env (= GitHub Actions secrets).
+- **Help & support** (Profile) – users raise a request (bug / question / feedback / account) and chat with the team; the app build and device are attached automatically.
+- **Crash & error reporting** – every crash (including one while the app starts), render error, unhandled rejection and unexpected API failure is sent to the portal's **Logs**: who, when, why (message + stack), where (screen / page / API operation), app build, device and OS. A fatal error is written to disk before the app closes and sent on the next launch if it couldn't go out.
+
+## Admin portal — https://spentiva.portal.exyconn.com
+
+Admin accounts only (same login as the app). Responsive, so it works on a phone too.
+
+| Section       | What it does                                                                                                                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dashboard** | Users (new / active / disabled), crashes and errors in the last 24 h, open support requests, problems per day, sign-ups per day, app versions in use, top unresolved errors                  |
+| **Users**     | Search / filter / sort; per user: app build, last seen, entries, errors, tickets; edit name & role, disable / enable, reset password, delete with all data                                   |
+| **Logs**      | MUI table of every crash / error from the app, portal and API with filters (level, source, status, dates, search); details drawer with stack trace, device, occurrences, resolve all similar |
+| **Support**   | Requests from the app with status / priority; conversation view and reply (the user sees it in the app)                                                                                      |
+| **Settings**  | Display time zone + locale for the portal, OpenAI key & model, Slack token & build channel, **Email (SMTP)** for the report emails + send a test email                                       |
+
+Forms use react-hook-form + zod; limits come from the API's public `validationRules` query, so the app, portal and server validate the same way. Tables keep page, sort and filters in the URL.
 
 ## Repository layout
 
 ```
 backend/src
-  models/            User, Category (+ Expense On items), PaymentSource, Transaction, ChatMessage, AppSetting
+  models/            User, Tracker (+ members), Category (+ Expense On items), PaymentSource, Transaction, ChatMessage, ReportSchedule, AppSetting
+  services/trackers/ access (owner / editor / viewer), sharing, delete, one-time migration of pre-tracker data into "Home"
+  services/email/    SMTP mailer, MJML templates (templates/), report data, schedules + the in-process scheduler
   services/ai.ts     OpenAI structured-output parser
   services/chat/     conversation flow: context, draft resolution, option handlers
   services/reports/  report builders (one per kind) + dashboard
-  graphql/           schema, zod inputs, resolvers/ (auth, catalog, money, chat, admin)
+  graphql/           schema (typeDefs.ts + schema/ logs, support, users), zod inputs, resolvers/
+  services/          logs (crash reports), support, users, stats (portal dashboard)
+portal/src
+  pages/<Section>/   Dashboard, Users, UserDetail, Logs (+ LogDrawer), Support, Ticket, Settings
+  forms/<name>/      <name>.form.tsx · <name>.types.tsx (zod schema from validationRules) · index.tsx
+  components/        DataTable (server-paginated MUI table), form fields, dialogs, chips
+  graphql/ · gql/    operations → generated types (GraphQL Code Generator)
 mobile/src
   app/               Expo Router routes (thin re-exports of screens/)
   screens/<Name>/    screen folders, index-based (every .tsx < 200 lines)
@@ -41,9 +69,9 @@ mobile/src
   components/        Tamagui UI kit (ui/), form fields (form/), ChartView, Ring, Icon, ConfirmDialog
   graphql/           operations → generated types in gql/ (GraphQL Code Generator)
   hooks/             React Query queries / mutations / chat
-scripts/             version.mjs, collect-builds.mjs, upload-drive.mjs, notify-slack.mjs, ios-build.sh, setup-secrets.mjs
+scripts/             bump-version.mjs, version.mjs, collect-builds.mjs, android-launch-check.sh, upload-drive.mjs, notify-slack.mjs, ios-build.sh, setup-secrets.mjs
 builds/              APK / AAB / IPA per version (written by CI)
-.github/workflows/   release.yml (apps) · deploy-backend.yml (API) · ci.yml (PRs)
+.github/workflows/   release.yml (apps) · deploy-backend.yml (API) · deploy-portal.yml (portal) · ci.yml (PRs)
 ```
 
 ## Run locally
@@ -56,7 +84,13 @@ npm install && npm run dev           # http://localhost:4000/graphql
 # App (Expo Go or a dev build)
 cd mobile && npm install
 npx expo start                       # uses https://spentiva.exyconn.com/graphql by default
+
+# Portal
+cd portal && cp .env.example .env    # VITE_API_URL
+npm install && npm run dev           # http://localhost:5174
 ```
+
+After cloning, run `npm install` once in the repo root: it installs the git hooks (husky).
 
 The app's server can be changed on the login screen (**Server: …**) — handy for a local API.
 
@@ -77,15 +111,17 @@ Quality gates (also enforced in CI): `npm run lint` (zero warnings), `npm run fo
 ## Branches, versions and builds
 
 - **Push only to `staging`** (feature branch → `staging`). When verified, open a PR `staging → main`; merging releases production.
+- **One version bump per push** – the husky pre-commit hook asks _major / minor / patch_ on the first commit after a push and bumps `mobile`, `backend` and `portal` together (`scripts/bump-version.mjs`). Without a terminal (e.g. the VS Code commit button) it uses `VERSION_BUMP=patch|minor|major`, else patch. Later commits before the push don't ask again.
 - **Every push to `staging`** runs **Build & Release Apps**:
   1. lint · format · types · codegen check;
-  2. next **semantic version** from [Conventional Commits](https://www.conventionalcommits.org) since the last staging release — `feat:` → minor, `fix:`/other → patch, `feat!:` / `BREAKING CHANGE` → major (first release: `1.0.0` from `mobile/package.json`);
+  2. the version from `mobile/package.json` (bumped by the hook); if a push didn't bump it, the next version comes from [Conventional Commits](https://www.conventionalcommits.org) — `feat:` → minor, `fix:`/other → patch, `feat!:` / `BREAKING CHANGE` → major;
   3. **APK + AAB** (Ubuntu) and **IPA** (macOS) in parallel;
   4. committed to **`builds/staging/vX.Y.Z/`** (+ `build-info.json` with SHA-256s, index in [`builds/README.md`](builds/README.md)), `mobile/package.json` bumped, tag `vX.Y.Z-staging` (bot commit is `[skip ci]` — pull afterwards);
   5. GitHub pre-release, upload to **Google Drive** (`Spentiva/staging/vX.Y.Z/`) and the files are posted to **Slack**.
 - A push to `main` (the merge) does the same as a production release (`builds/production/vX.Y.Z/`, tag `vX.Y.Z`).
 - Android `versionCode` = `major*1_000_000 + minor*1_000 + patch` (iOS build number too). Only the newest 10 versions per channel stay in `builds/` (`KEEP_BUILDS`); every version stays in Releases/Drive. Files > 95 MB are released but not committed (GitHub limit).
-- Backend changes (`backend/**`) trigger **Deploy Backend** instead of an app build.
+- **Android launch check** – in parallel, CI builds the same release APK for x86_64, opens it on an emulator and checks it's still running 30 s later; logcat, the crash buffer and a screenshot are kept as the `launch-check` artifact. Diagnostic only, it never blocks a release (this is how the v1.0.2 crash on open was found).
+- Backend changes (`backend/**`) trigger **Deploy Backend**, portal changes (`portal/**`) trigger **Deploy Portal** (container `spentiva-portal` on `127.0.0.1:4101`, vhost `/etc/nginx/sites-available/spentiva.portal.exyconn.com.conf`).
 
 ## Backend deployment (Docker over SSH)
 
@@ -105,6 +141,7 @@ Repository secrets are the **defaults for everything**; the `staging` / `product
 | `API_URL`                                                                                              | app build          | set – `https://spentiva.exyconn.com/graphql`                                        |
 | `SSH_HOST` · `SSH_USER` · `SSH_PRIVATE_KEY` (`SSH_PORT`)                                               | deploy             | set                                                                                 |
 | `SLACK_BOT_TOKEN` · `SLACK_CHANNEL_ID`                                                                 | builds → Slack     | optional defaults; the channel chosen in the app wins (read via `GET /ci/config`)   |
+| `SMTP_HOST` · `SMTP_PORT` · `SMTP_USER` · `SMTP_PASSWORD` · `SMTP_FROM`                                | report emails      | optional defaults; admins can set them in the portal → Settings → Email instead     |
 | `GDRIVE_FOLDER_ID` · `GDRIVE_CLIENT_ID` · `GDRIVE_CLIENT_SECRET` · `GDRIVE_REFRESH_TOKEN`              | builds → Drive     | OAuth client + refresh token with scope `https://www.googleapis.com/auth/drive`     |
 | `ANDROID_KEYSTORE_BASE64` · `ANDROID_KEYSTORE_PASSWORD` · `ANDROID_KEY_ALIAS` · `ANDROID_KEY_PASSWORD` | Play Store signing | optional – otherwise the debug key signs the APK (installable, not Play-uploadable) |
 | `IOS_P12_BASE64` · `IOS_P12_PASSWORD` · `IOS_PROVISION_PROFILE_BASE64`                                 | signed IPA         | optional – otherwise the IPA is **unsigned**                                        |

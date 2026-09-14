@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView } from 'react-native';
-import { FiMessageCircle } from 'react-icons/fi';
+import { FiMail, FiMessageCircle } from 'react-icons/fi';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from '@/components/Icon';
 import { ReportView } from '@/components/ReportView';
-import { Card, Chip, ErrorState, H2, Loading, Muted, Screen, Segmented, Title } from '@/components/ui';
+import { TrackerSwitcher } from '@/components/TrackerSwitcher';
+import { Card, Chip, ErrorState, H2, IconButton, Loading, Muted, Screen, Segmented, Title } from '@/components/ui';
 import { useReport } from '@/hooks/queries';
 import { useUser } from '@/lib/auth';
 import { PERIODS, REPORT_KINDS, TX_TYPE_OPTIONS } from '@/lib/constants';
@@ -85,7 +86,11 @@ export default function ReportsScreen() {
 
   return (
     <Screen refreshing={isRefetching} onRefresh={retry}>
-      <Title>Reports</Title>
+      <XStack alignItems="center" justifyContent="space-between" gap={10}>
+        <Title>Reports</Title>
+        <IconButton icon={FiMail} onPress={() => router.push('/settings/email-reports')} label="Email reports" />
+      </XStack>
+      <TrackerSwitcher />
       <ChipRow items={REPORT_KINDS} value={kind} onChange={setKind} />
       <ChipRow items={PERIODS} value={effectivePeriod} onChange={setPeriod} />
       {both ? null : <Segmented value={type} onChange={setType} options={TX_TYPE_OPTIONS} />}

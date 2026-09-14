@@ -24,6 +24,23 @@ export type ChatKind = 'ERROR' | 'OPTIONS' | 'REPORT' | 'TEXT' | 'TRANSACTION';
 
 export type ChatRole = 'ASSISTANT' | 'USER';
 
+export type ClientLogInput = {
+  apiUrl?: string | null | undefined;
+  appVersion?: string | null | undefined;
+  buildNumber?: string | null | undefined;
+  context?: string | null | undefined;
+  device?: string | null | undefined;
+  level: LogLevel;
+  message: string;
+  occurredAt?: string | null | undefined;
+  osVersion?: string | null | undefined;
+  platform?: string | null | undefined;
+  /** APP or PORTAL */
+  source: LogSource;
+  stack?: string | null | undefined;
+  url?: string | null | undefined;
+};
+
 export type EnvSource = 'APP' | 'NONE' | 'SERVER_ENV';
 
 export type EnvVarInput = {
@@ -31,6 +48,10 @@ export type EnvVarInput = {
   /** Empty or null clears the value */
   value?: string | null | undefined;
 };
+
+export type LogLevel = 'ERROR' | 'FATAL' | 'INFO' | 'WARN';
+
+export type LogSource = 'API' | 'APP' | 'PORTAL';
 
 export type LoginInput = {
   email: string;
@@ -51,21 +72,38 @@ export type Period =
   | 'LAST_30_DAYS'
   | 'LAST_90_DAYS'
   | 'LAST_MONTH'
+  | 'LAST_QUARTER'
   | 'LAST_WEEK'
   | 'LAST_YEAR'
   | 'THIS_MONTH'
+  | 'THIS_QUARTER'
   | 'THIS_WEEK'
   | 'THIS_YEAR'
   | 'TODAY'
   | 'YESTERDAY';
 
 export type ProfileInput = {
+  /** Currency new trackers start with */
   currency?: string | null | undefined;
   locale?: string | null | undefined;
+  /**
+   * Sets the budget of your default tracker
+   * @deprecated Use updateTracker
+   */
   monthlyBudget?: number | null | undefined;
   name?: string | null | undefined;
   timezone?: string | null | undefined;
 };
+
+export type ReportFrequency =
+  /** Every morning, for the day before */
+  | 'DAILY'
+  /** On the 1st, for the month before */
+  | 'MONTHLY'
+  /** On 1 Jan / Apr / Jul / Oct, for the quarter before */
+  | 'QUARTERLY'
+  /** On 1 January, for the year before */
+  | 'YEARLY';
 
 export type ReportInput = {
   categoryId?: string | number | null | undefined;
@@ -92,6 +130,41 @@ export type SignupInput = {
 
 export type StatFormat = 'CURRENCY' | 'NUMBER' | 'PERCENT';
 
+export type TicketAuthor = 'ADMIN' | 'USER';
+
+export type TicketCategory = 'ACCOUNT' | 'BUG' | 'FEEDBACK' | 'OTHER' | 'QUESTION';
+
+export type TicketInput = {
+  category: TicketCategory;
+  message: string;
+  subject: string;
+};
+
+export type TicketStatus = 'CLOSED' | 'IN_PROGRESS' | 'OPEN' | 'RESOLVED';
+
+export type TrackerInput = {
+  /** ISO 4217 */
+  currency: string;
+  kind: TrackerKind;
+  monthlyBudget?: number | null | undefined;
+  name: string;
+};
+
+/** What a tracker is for; picks its starting categories and payment modes */
+export type TrackerKind = 'BUSINESS' | 'PERSONAL';
+
+/** OWNER manages the tracker and who it's shared with, EDITOR adds entries, VIEWER only reads */
+export type TrackerRole = 'EDITOR' | 'OWNER' | 'VIEWER';
+
+export type TrackerUpdateInput = {
+  /** A new currency re-expresses every entry with today's rates */
+  currency?: string | null | undefined;
+  kind?: TrackerKind | null | undefined;
+  /** null clears the budget (tracks against income) */
+  monthlyBudget?: number | null | undefined;
+  name?: string | null | undefined;
+};
+
 export type TransactionFilter = {
   categoryId?: string | number | null | undefined;
   from?: string | null | undefined;
@@ -106,7 +179,7 @@ export type TransactionFilter = {
 export type TransactionInput = {
   amount: number;
   categoryId: string | number;
-  /** ISO 4217, defaults to the user's currency */
+  /** ISO 4217, defaults to the tracker's currency */
   currency?: string | null | undefined;
   expenseOnId?: string | number | null | undefined;
   note?: string | null | undefined;
@@ -127,7 +200,6 @@ export type UserFieldsFragment = {
   currency: string;
   timezone: string;
   locale: string;
-  monthlyBudget: number | null;
   isAdmin: boolean;
   createdAt: string;
 };
@@ -160,6 +232,8 @@ export type TxFieldsFragment = {
   note: string | null;
   occurredAt: string;
   via: TxVia;
+  addedById: string;
+  addedByName: string | null;
   createdAt: string;
 };
 
@@ -212,6 +286,8 @@ export type ChatFieldsFragment = {
     note: string | null;
     occurredAt: string;
     via: TxVia;
+    addedById: string;
+    addedByName: string | null;
     createdAt: string;
   } | null;
   options: Array<{ id: string; label: string; action: string; value: string | null }>;
@@ -247,17 +323,7 @@ export type SignupMutationVariables = Exact<{
 export type SignupMutation = {
   signup: {
     token: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      currency: string;
-      timezone: string;
-      locale: string;
-      monthlyBudget: number | null;
-      isAdmin: boolean;
-      createdAt: string;
-    };
+    user: { id: string; name: string; email: string; currency: string; timezone: string; locale: string; isAdmin: boolean; createdAt: string };
   };
 };
 
@@ -268,17 +334,7 @@ export type LoginMutationVariables = Exact<{
 export type LoginMutation = {
   login: {
     token: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      currency: string;
-      timezone: string;
-      locale: string;
-      monthlyBudget: number | null;
-      isAdmin: boolean;
-      createdAt: string;
-    };
+    user: { id: string; name: string; email: string; currency: string; timezone: string; locale: string; isAdmin: boolean; createdAt: string };
   };
 };
 
@@ -287,17 +343,7 @@ export type UpdateProfileMutationVariables = Exact<{
 }>;
 
 export type UpdateProfileMutation = {
-  updateProfile: {
-    id: string;
-    name: string;
-    email: string;
-    currency: string;
-    timezone: string;
-    locale: string;
-    monthlyBudget: number | null;
-    isAdmin: boolean;
-    createdAt: string;
-  };
+  updateProfile: { id: string; name: string; email: string; currency: string; timezone: string; locale: string; isAdmin: boolean; createdAt: string };
 };
 
 export type ChangePasswordMutationVariables = Exact<{
@@ -308,6 +354,7 @@ export type ChangePasswordMutationVariables = Exact<{
 export type ChangePasswordMutation = { changePassword: boolean };
 
 export type CreateCategoryMutationVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   input: CategoryInput;
 }>;
 
@@ -359,6 +406,7 @@ export type RemoveExpenseOnMutation = {
 };
 
 export type CreateSourceMutationVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   input: PaymentSourceInput;
 }>;
 
@@ -378,6 +426,7 @@ export type DeleteSourceMutationVariables = Exact<{
 export type DeleteSourceMutation = { deletePaymentSource: boolean };
 
 export type CreateTxMutationVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   input: TransactionInput;
 }>;
 
@@ -399,6 +448,8 @@ export type CreateTxMutation = {
     note: string | null;
     occurredAt: string;
     via: TxVia;
+    addedById: string;
+    addedByName: string | null;
     createdAt: string;
   };
 };
@@ -426,6 +477,8 @@ export type UpdateTxMutation = {
     note: string | null;
     occurredAt: string;
     via: TxVia;
+    addedById: string;
+    addedByName: string | null;
     createdAt: string;
   };
 };
@@ -437,6 +490,7 @@ export type DeleteTxMutationVariables = Exact<{
 export type DeleteTxMutation = { deleteTransaction: boolean };
 
 export type SendChatMutationVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   text: string;
 }>;
 
@@ -466,6 +520,8 @@ export type SendChatMutation = {
       note: string | null;
       occurredAt: string;
       via: TxVia;
+      addedById: string;
+      addedByName: string | null;
       createdAt: string;
     } | null;
     options: Array<{ id: string; label: string; action: string; value: string | null }>;
@@ -516,6 +572,8 @@ export type ChooseOptionMutation = {
       note: string | null;
       occurredAt: string;
       via: TxVia;
+      addedById: string;
+      addedByName: string | null;
       createdAt: string;
     } | null;
     options: Array<{ id: string; label: string; action: string; value: string | null }>;
@@ -535,7 +593,9 @@ export type ChooseOptionMutation = {
   }>;
 };
 
-export type ClearChatMutationVariables = Exact<{ [key: string]: never }>;
+export type ClearChatMutationVariables = Exact<{
+  trackerId?: string | number | null | undefined;
+}>;
 
 export type ClearChatMutation = { clearChat: boolean };
 
@@ -558,30 +618,25 @@ export type TestOpenAiMutation = { testOpenAi: string };
 export type MeQueryVariables = Exact<{ [key: string]: never }>;
 
 export type MeQuery = {
-  me: {
-    id: string;
-    name: string;
-    email: string;
-    currency: string;
-    timezone: string;
-    locale: string;
-    monthlyBudget: number | null;
-    isAdmin: boolean;
-    createdAt: string;
-  } | null;
+  me: { id: string; name: string; email: string; currency: string; timezone: string; locale: string; isAdmin: boolean; createdAt: string } | null;
 };
 
-export type CategoriesQueryVariables = Exact<{ [key: string]: never }>;
+export type CategoriesQueryVariables = Exact<{
+  trackerId?: string | number | null | undefined;
+}>;
 
 export type CategoriesQuery = {
   categories: Array<{ id: string; name: string; type: TxType; icon: string; color: string; items: Array<{ id: string; name: string }> }>;
 };
 
-export type SourcesQueryVariables = Exact<{ [key: string]: never }>;
+export type SourcesQueryVariables = Exact<{
+  trackerId?: string | number | null | undefined;
+}>;
 
 export type SourcesQuery = { paymentSources: Array<{ id: string; name: string; icon: string; isDefault: boolean }> };
 
 export type DashboardQueryVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   month?: string | null | undefined;
 }>;
 
@@ -636,12 +691,15 @@ export type DashboardQuery = {
       note: string | null;
       occurredAt: string;
       via: TxVia;
+      addedById: string;
+      addedByName: string | null;
       createdAt: string;
     }>;
   };
 };
 
 export type ReportQueryVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   input: ReportInput;
 }>;
 
@@ -662,6 +720,7 @@ export type ReportQuery = {
 };
 
 export type TransactionsQueryVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   filter?: TransactionFilter | null | undefined;
   limit?: number | null | undefined;
   offset?: number | null | undefined;
@@ -688,6 +747,8 @@ export type TransactionsQuery = {
       note: string | null;
       occurredAt: string;
       via: TxVia;
+      addedById: string;
+      addedByName: string | null;
       createdAt: string;
     }>;
   };
@@ -715,11 +776,14 @@ export type TransactionQuery = {
     note: string | null;
     occurredAt: string;
     via: TxVia;
+    addedById: string;
+    addedByName: string | null;
     createdAt: string;
   } | null;
 };
 
 export type ChatHistoryQueryVariables = Exact<{
+  trackerId?: string | number | null | undefined;
   limit?: number | null | undefined;
   before?: string | null | undefined;
 }>;
@@ -750,6 +814,8 @@ export type ChatHistoryQuery = {
       note: string | null;
       occurredAt: string;
       via: TxVia;
+      addedById: string;
+      addedByName: string | null;
       createdAt: string;
     } | null;
     options: Array<{ id: string; label: string; action: string; value: string | null }>;
@@ -787,6 +853,278 @@ export type OpenAiModelsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type OpenAiModelsQuery = { openAiModels: Array<string> };
 
+export type TicketFieldsFragment = {
+  id: string;
+  subject: string;
+  category: TicketCategory;
+  status: TicketStatus;
+  messageCount: number;
+  lastAuthor: TicketAuthor;
+  lastMessageAt: string;
+  createdAt: string;
+  messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+};
+
+export type MySupportTicketsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type MySupportTicketsQuery = {
+  mySupportTickets: Array<{
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  }>;
+};
+
+export type SupportTicketQueryVariables = Exact<{
+  id: string | number;
+}>;
+
+export type SupportTicketQuery = {
+  supportTicket: {
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  } | null;
+};
+
+export type CreateSupportTicketMutationVariables = Exact<{
+  input: TicketInput;
+}>;
+
+export type CreateSupportTicketMutation = {
+  createSupportTicket: {
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  };
+};
+
+export type ReplySupportTicketMutationVariables = Exact<{
+  id: string | number;
+  body: string;
+}>;
+
+export type ReplySupportTicketMutation = {
+  replySupportTicket: {
+    id: string;
+    subject: string;
+    category: TicketCategory;
+    status: TicketStatus;
+    messageCount: number;
+    lastAuthor: TicketAuthor;
+    lastMessageAt: string;
+    createdAt: string;
+    messages: Array<{ id: string; author: TicketAuthor; authorName: string; body: string; createdAt: string }>;
+  };
+};
+
+export type ValidationRulesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type ValidationRulesQuery = {
+  validationRules: {
+    nameMax: number;
+    passwordMin: number;
+    passwordMax: number;
+    ticketSubjectMin: number;
+    ticketSubjectMax: number;
+    ticketMessageMin: number;
+    ticketMessageMax: number;
+  };
+};
+
+export type ReportLogsMutationVariables = Exact<{
+  input: Array<ClientLogInput> | ClientLogInput;
+}>;
+
+export type ReportLogsMutation = { reportLogs: number };
+
+export type TrackerFieldsFragment = {
+  id: string;
+  name: string;
+  kind: TrackerKind;
+  currency: string;
+  monthlyBudget: number | null;
+  role: TrackerRole;
+  isDefault: boolean;
+  createdAt: string;
+  owner: { id: string; name: string; email: string };
+  members: Array<{ role: TrackerRole; addedAt: string; user: { id: string; name: string; email: string } }>;
+};
+
+export type ScheduleFieldsFragment = { frequency: ReportFrequency; nextRunAt: string; lastSentAt: string | null; lastError: string | null };
+
+export type TrackersQueryVariables = Exact<{ [key: string]: never }>;
+
+export type TrackersQuery = {
+  trackers: Array<{
+    id: string;
+    name: string;
+    kind: TrackerKind;
+    currency: string;
+    monthlyBudget: number | null;
+    role: TrackerRole;
+    isDefault: boolean;
+    createdAt: string;
+    owner: { id: string; name: string; email: string };
+    members: Array<{ role: TrackerRole; addedAt: string; user: { id: string; name: string; email: string } }>;
+  }>;
+};
+
+export type CreateTrackerMutationVariables = Exact<{
+  input: TrackerInput;
+}>;
+
+export type CreateTrackerMutation = {
+  createTracker: {
+    id: string;
+    name: string;
+    kind: TrackerKind;
+    currency: string;
+    monthlyBudget: number | null;
+    role: TrackerRole;
+    isDefault: boolean;
+    createdAt: string;
+    owner: { id: string; name: string; email: string };
+    members: Array<{ role: TrackerRole; addedAt: string; user: { id: string; name: string; email: string } }>;
+  };
+};
+
+export type UpdateTrackerMutationVariables = Exact<{
+  id: string | number;
+  input: TrackerUpdateInput;
+}>;
+
+export type UpdateTrackerMutation = {
+  updateTracker: {
+    id: string;
+    name: string;
+    kind: TrackerKind;
+    currency: string;
+    monthlyBudget: number | null;
+    role: TrackerRole;
+    isDefault: boolean;
+    createdAt: string;
+    owner: { id: string; name: string; email: string };
+    members: Array<{ role: TrackerRole; addedAt: string; user: { id: string; name: string; email: string } }>;
+  };
+};
+
+export type DeleteTrackerMutationVariables = Exact<{
+  id: string | number;
+}>;
+
+export type DeleteTrackerMutation = { deleteTracker: boolean };
+
+export type ShareTrackerMutationVariables = Exact<{
+  id: string | number;
+  email: string;
+  role: TrackerRole;
+}>;
+
+export type ShareTrackerMutation = {
+  shareTracker: {
+    id: string;
+    name: string;
+    kind: TrackerKind;
+    currency: string;
+    monthlyBudget: number | null;
+    role: TrackerRole;
+    isDefault: boolean;
+    createdAt: string;
+    owner: { id: string; name: string; email: string };
+    members: Array<{ role: TrackerRole; addedAt: string; user: { id: string; name: string; email: string } }>;
+  };
+};
+
+export type SetTrackerMemberRoleMutationVariables = Exact<{
+  id: string | number;
+  userId: string | number;
+  role: TrackerRole;
+}>;
+
+export type SetTrackerMemberRoleMutation = {
+  setTrackerMemberRole: {
+    id: string;
+    name: string;
+    kind: TrackerKind;
+    currency: string;
+    monthlyBudget: number | null;
+    role: TrackerRole;
+    isDefault: boolean;
+    createdAt: string;
+    owner: { id: string; name: string; email: string };
+    members: Array<{ role: TrackerRole; addedAt: string; user: { id: string; name: string; email: string } }>;
+  };
+};
+
+export type RemoveTrackerMemberMutationVariables = Exact<{
+  id: string | number;
+  userId: string | number;
+}>;
+
+export type RemoveTrackerMemberMutation = {
+  removeTrackerMember: {
+    id: string;
+    name: string;
+    kind: TrackerKind;
+    currency: string;
+    monthlyBudget: number | null;
+    role: TrackerRole;
+    isDefault: boolean;
+    createdAt: string;
+    owner: { id: string; name: string; email: string };
+    members: Array<{ role: TrackerRole; addedAt: string; user: { id: string; name: string; email: string } }>;
+  };
+};
+
+export type LeaveTrackerMutationVariables = Exact<{
+  id: string | number;
+}>;
+
+export type LeaveTrackerMutation = { leaveTracker: boolean };
+
+export type EmailReportsQueryVariables = Exact<{
+  trackerId?: string | number | null | undefined;
+}>;
+
+export type EmailReportsQuery = {
+  emailReports: Array<{ frequency: ReportFrequency; nextRunAt: string; lastSentAt: string | null; lastError: string | null }>;
+};
+
+export type SetEmailReportsMutationVariables = Exact<{
+  trackerId?: string | number | null | undefined;
+  frequencies: Array<ReportFrequency> | ReportFrequency;
+}>;
+
+export type SetEmailReportsMutation = {
+  setEmailReports: Array<{ frequency: ReportFrequency; nextRunAt: string; lastSentAt: string | null; lastError: string | null }>;
+};
+
+export type SendReportEmailMutationVariables = Exact<{
+  trackerId?: string | number | null | undefined;
+  period: Period;
+}>;
+
+export type SendReportEmailMutation = { sendReportEmail: string };
+
 export class TypedDocumentString<TResult, TVariables> extends String implements DocumentTypeDecoration<TResult, TVariables> {
   __apiType?: NonNullable<DocumentTypeDecoration<TResult, TVariables>['__apiType']>;
   private value: string;
@@ -811,7 +1149,6 @@ export const UserFieldsFragmentDoc = new TypedDocumentString(
   currency
   timezone
   locale
-  monthlyBudget
   isAdmin
   createdAt
 }
@@ -878,6 +1215,8 @@ export const TxFieldsFragmentDoc = new TypedDocumentString(
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }
     `,
@@ -951,6 +1290,8 @@ export const ChatFieldsFragmentDoc = new TypedDocumentString(
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }
 fragment ReportFields on Report {
@@ -992,6 +1333,68 @@ export const EnvFieldsFragmentDoc = new TypedDocumentString(
     `,
   { fragmentName: 'EnvFields' },
 ) as unknown as TypedDocumentString<EnvFieldsFragment, unknown>;
+export const TicketFieldsFragmentDoc = new TypedDocumentString(
+  `
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}
+    `,
+  { fragmentName: 'TicketFields' },
+) as unknown as TypedDocumentString<TicketFieldsFragment, unknown>;
+export const TrackerFieldsFragmentDoc = new TypedDocumentString(
+  `
+    fragment TrackerFields on Tracker {
+  id
+  name
+  kind
+  currency
+  monthlyBudget
+  role
+  isDefault
+  owner {
+    id
+    name
+    email
+  }
+  members {
+    role
+    addedAt
+    user {
+      id
+      name
+      email
+    }
+  }
+  createdAt
+}
+    `,
+  { fragmentName: 'TrackerFields' },
+) as unknown as TypedDocumentString<TrackerFieldsFragment, unknown>;
+export const ScheduleFieldsFragmentDoc = new TypedDocumentString(
+  `
+    fragment ScheduleFields on EmailReportSchedule {
+  frequency
+  nextRunAt
+  lastSentAt
+  lastError
+}
+    `,
+  { fragmentName: 'ScheduleFields' },
+) as unknown as TypedDocumentString<ScheduleFieldsFragment, unknown>;
 export const SignupDocument = new TypedDocumentString(`
     mutation Signup($input: SignupInput!) {
   signup(input: $input) {
@@ -1008,7 +1411,6 @@ export const SignupDocument = new TypedDocumentString(`
   currency
   timezone
   locale
-  monthlyBudget
   isAdmin
   createdAt
 }`) as unknown as TypedDocumentString<SignupMutation, SignupMutationVariables>;
@@ -1028,7 +1430,6 @@ export const LoginDocument = new TypedDocumentString(`
   currency
   timezone
   locale
-  monthlyBudget
   isAdmin
   createdAt
 }`) as unknown as TypedDocumentString<LoginMutation, LoginMutationVariables>;
@@ -1045,7 +1446,6 @@ export const UpdateProfileDocument = new TypedDocumentString(`
   currency
   timezone
   locale
-  monthlyBudget
   isAdmin
   createdAt
 }`) as unknown as TypedDocumentString<UpdateProfileMutation, UpdateProfileMutationVariables>;
@@ -1055,8 +1455,8 @@ export const ChangePasswordDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<ChangePasswordMutation, ChangePasswordMutationVariables>;
 export const CreateCategoryDocument = new TypedDocumentString(`
-    mutation CreateCategory($input: CategoryInput!) {
-  createCategory(input: $input) {
+    mutation CreateCategory($trackerId: ID, $input: CategoryInput!) {
+  createCategory(trackerId: $trackerId, input: $input) {
     ...CategoryFields
   }
 }
@@ -1145,8 +1545,8 @@ export const RemoveExpenseOnDocument = new TypedDocumentString(`
   }
 }`) as unknown as TypedDocumentString<RemoveExpenseOnMutation, RemoveExpenseOnMutationVariables>;
 export const CreateSourceDocument = new TypedDocumentString(`
-    mutation CreateSource($input: PaymentSourceInput!) {
-  createPaymentSource(input: $input) {
+    mutation CreateSource($trackerId: ID, $input: PaymentSourceInput!) {
+  createPaymentSource(trackerId: $trackerId, input: $input) {
     ...SourceFields
   }
 }
@@ -1174,8 +1574,8 @@ export const DeleteSourceDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<DeleteSourceMutation, DeleteSourceMutationVariables>;
 export const CreateTxDocument = new TypedDocumentString(`
-    mutation CreateTx($input: TransactionInput!) {
-  createTransaction(input: $input) {
+    mutation CreateTx($trackerId: ID, $input: TransactionInput!) {
+  createTransaction(trackerId: $trackerId, input: $input) {
     ...TxFields
   }
 }
@@ -1196,6 +1596,8 @@ export const CreateTxDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }`) as unknown as TypedDocumentString<CreateTxMutation, CreateTxMutationVariables>;
 export const UpdateTxDocument = new TypedDocumentString(`
@@ -1221,6 +1623,8 @@ export const UpdateTxDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }`) as unknown as TypedDocumentString<UpdateTxMutation, UpdateTxMutationVariables>;
 export const DeleteTxDocument = new TypedDocumentString(`
@@ -1229,8 +1633,8 @@ export const DeleteTxDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<DeleteTxMutation, DeleteTxMutationVariables>;
 export const SendChatDocument = new TypedDocumentString(`
-    mutation SendChat($text: String!) {
-  sendChatMessage(text: $text) {
+    mutation SendChat($trackerId: ID, $text: String!) {
+  sendChatMessage(trackerId: $trackerId, text: $text) {
     ...ChatFields
   }
 }
@@ -1251,6 +1655,8 @@ export const SendChatDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }
 fragment ReportFields on Report {
@@ -1320,6 +1726,8 @@ export const ChooseOptionDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }
 fragment ReportFields on Report {
@@ -1367,8 +1775,8 @@ fragment ChatFields on ChatMessage {
   createdAt
 }`) as unknown as TypedDocumentString<ChooseOptionMutation, ChooseOptionMutationVariables>;
 export const ClearChatDocument = new TypedDocumentString(`
-    mutation ClearChat {
-  clearChat
+    mutation ClearChat($trackerId: ID) {
+  clearChat(trackerId: $trackerId)
 }
     `) as unknown as TypedDocumentString<ClearChatMutation, ClearChatMutationVariables>;
 export const SetEnvVarsDocument = new TypedDocumentString(`
@@ -1409,13 +1817,12 @@ export const MeDocument = new TypedDocumentString(`
   currency
   timezone
   locale
-  monthlyBudget
   isAdmin
   createdAt
 }`) as unknown as TypedDocumentString<MeQuery, MeQueryVariables>;
 export const CategoriesDocument = new TypedDocumentString(`
-    query Categories {
-  categories {
+    query Categories($trackerId: ID) {
+  categories(trackerId: $trackerId) {
     ...CategoryFields
   }
 }
@@ -1431,8 +1838,8 @@ export const CategoriesDocument = new TypedDocumentString(`
   }
 }`) as unknown as TypedDocumentString<CategoriesQuery, CategoriesQueryVariables>;
 export const SourcesDocument = new TypedDocumentString(`
-    query Sources {
-  paymentSources {
+    query Sources($trackerId: ID) {
+  paymentSources(trackerId: $trackerId) {
     ...SourceFields
   }
 }
@@ -1443,8 +1850,8 @@ export const SourcesDocument = new TypedDocumentString(`
   isDefault
 }`) as unknown as TypedDocumentString<SourcesQuery, SourcesQueryVariables>;
 export const DashboardDocument = new TypedDocumentString(`
-    query Dashboard($month: String) {
-  dashboard(month: $month) {
+    query Dashboard($trackerId: ID, $month: String) {
+  dashboard(trackerId: $trackerId, month: $month) {
     from
     to
     currency
@@ -1493,6 +1900,8 @@ export const DashboardDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }
 fragment ReportFields on Report {
@@ -1528,8 +1937,8 @@ fragment SliceFields on CategorySlice {
   percent
 }`) as unknown as TypedDocumentString<DashboardQuery, DashboardQueryVariables>;
 export const ReportDocument = new TypedDocumentString(`
-    query Report($input: ReportInput!) {
-  report(input: $input) {
+    query Report($trackerId: ID, $input: ReportInput!) {
+  report(trackerId: $trackerId, input: $input) {
     ...ReportFields
   }
 }
@@ -1557,8 +1966,13 @@ export const ReportDocument = new TypedDocumentString(`
   empty
 }`) as unknown as TypedDocumentString<ReportQuery, ReportQueryVariables>;
 export const TransactionsDocument = new TypedDocumentString(`
-    query Transactions($filter: TransactionFilter, $limit: Int, $offset: Int) {
-  transactions(filter: $filter, limit: $limit, offset: $offset) {
+    query Transactions($trackerId: ID, $filter: TransactionFilter, $limit: Int, $offset: Int) {
+  transactions(
+    trackerId: $trackerId
+    filter: $filter
+    limit: $limit
+    offset: $offset
+  ) {
     items {
       ...TxFields
     }
@@ -1583,6 +1997,8 @@ export const TransactionsDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }`) as unknown as TypedDocumentString<TransactionsQuery, TransactionsQueryVariables>;
 export const TransactionDocument = new TypedDocumentString(`
@@ -1608,11 +2024,13 @@ export const TransactionDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }`) as unknown as TypedDocumentString<TransactionQuery, TransactionQueryVariables>;
 export const ChatHistoryDocument = new TypedDocumentString(`
-    query ChatHistory($limit: Int, $before: DateTime) {
-  chatHistory(limit: $limit, before: $before) {
+    query ChatHistory($trackerId: ID, $limit: Int, $before: DateTime) {
+  chatHistory(trackerId: $trackerId, limit: $limit, before: $before) {
     ...ChatFields
   }
 }
@@ -1633,6 +2051,8 @@ export const ChatHistoryDocument = new TypedDocumentString(`
   note
   occurredAt
   via
+  addedById
+  addedByName
   createdAt
 }
 fragment ReportFields on Report {
@@ -1719,3 +2139,332 @@ export const OpenAiModelsDocument = new TypedDocumentString(`
   openAiModels
 }
     `) as unknown as TypedDocumentString<OpenAiModelsQuery, OpenAiModelsQueryVariables>;
+export const MySupportTicketsDocument = new TypedDocumentString(`
+    query MySupportTickets {
+  mySupportTickets {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<MySupportTicketsQuery, MySupportTicketsQueryVariables>;
+export const SupportTicketDocument = new TypedDocumentString(`
+    query SupportTicket($id: ID!) {
+  supportTicket(id: $id) {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<SupportTicketQuery, SupportTicketQueryVariables>;
+export const CreateSupportTicketDocument = new TypedDocumentString(`
+    mutation CreateSupportTicket($input: TicketInput!) {
+  createSupportTicket(input: $input) {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<CreateSupportTicketMutation, CreateSupportTicketMutationVariables>;
+export const ReplySupportTicketDocument = new TypedDocumentString(`
+    mutation ReplySupportTicket($id: ID!, $body: String!) {
+  replySupportTicket(id: $id, body: $body) {
+    ...TicketFields
+  }
+}
+    fragment TicketFields on SupportTicket {
+  id
+  subject
+  category
+  status
+  messageCount
+  lastAuthor
+  lastMessageAt
+  createdAt
+  messages {
+    id
+    author
+    authorName
+    body
+    createdAt
+  }
+}`) as unknown as TypedDocumentString<ReplySupportTicketMutation, ReplySupportTicketMutationVariables>;
+export const ValidationRulesDocument = new TypedDocumentString(`
+    query ValidationRules {
+  validationRules {
+    nameMax
+    passwordMin
+    passwordMax
+    ticketSubjectMin
+    ticketSubjectMax
+    ticketMessageMin
+    ticketMessageMax
+  }
+}
+    `) as unknown as TypedDocumentString<ValidationRulesQuery, ValidationRulesQueryVariables>;
+export const ReportLogsDocument = new TypedDocumentString(`
+    mutation ReportLogs($input: [ClientLogInput!]!) {
+  reportLogs(input: $input)
+}
+    `) as unknown as TypedDocumentString<ReportLogsMutation, ReportLogsMutationVariables>;
+export const TrackersDocument = new TypedDocumentString(`
+    query Trackers {
+  trackers {
+    ...TrackerFields
+  }
+}
+    fragment TrackerFields on Tracker {
+  id
+  name
+  kind
+  currency
+  monthlyBudget
+  role
+  isDefault
+  owner {
+    id
+    name
+    email
+  }
+  members {
+    role
+    addedAt
+    user {
+      id
+      name
+      email
+    }
+  }
+  createdAt
+}`) as unknown as TypedDocumentString<TrackersQuery, TrackersQueryVariables>;
+export const CreateTrackerDocument = new TypedDocumentString(`
+    mutation CreateTracker($input: TrackerInput!) {
+  createTracker(input: $input) {
+    ...TrackerFields
+  }
+}
+    fragment TrackerFields on Tracker {
+  id
+  name
+  kind
+  currency
+  monthlyBudget
+  role
+  isDefault
+  owner {
+    id
+    name
+    email
+  }
+  members {
+    role
+    addedAt
+    user {
+      id
+      name
+      email
+    }
+  }
+  createdAt
+}`) as unknown as TypedDocumentString<CreateTrackerMutation, CreateTrackerMutationVariables>;
+export const UpdateTrackerDocument = new TypedDocumentString(`
+    mutation UpdateTracker($id: ID!, $input: TrackerUpdateInput!) {
+  updateTracker(id: $id, input: $input) {
+    ...TrackerFields
+  }
+}
+    fragment TrackerFields on Tracker {
+  id
+  name
+  kind
+  currency
+  monthlyBudget
+  role
+  isDefault
+  owner {
+    id
+    name
+    email
+  }
+  members {
+    role
+    addedAt
+    user {
+      id
+      name
+      email
+    }
+  }
+  createdAt
+}`) as unknown as TypedDocumentString<UpdateTrackerMutation, UpdateTrackerMutationVariables>;
+export const DeleteTrackerDocument = new TypedDocumentString(`
+    mutation DeleteTracker($id: ID!) {
+  deleteTracker(id: $id)
+}
+    `) as unknown as TypedDocumentString<DeleteTrackerMutation, DeleteTrackerMutationVariables>;
+export const ShareTrackerDocument = new TypedDocumentString(`
+    mutation ShareTracker($id: ID!, $email: String!, $role: TrackerRole!) {
+  shareTracker(id: $id, email: $email, role: $role) {
+    ...TrackerFields
+  }
+}
+    fragment TrackerFields on Tracker {
+  id
+  name
+  kind
+  currency
+  monthlyBudget
+  role
+  isDefault
+  owner {
+    id
+    name
+    email
+  }
+  members {
+    role
+    addedAt
+    user {
+      id
+      name
+      email
+    }
+  }
+  createdAt
+}`) as unknown as TypedDocumentString<ShareTrackerMutation, ShareTrackerMutationVariables>;
+export const SetTrackerMemberRoleDocument = new TypedDocumentString(`
+    mutation SetTrackerMemberRole($id: ID!, $userId: ID!, $role: TrackerRole!) {
+  setTrackerMemberRole(id: $id, userId: $userId, role: $role) {
+    ...TrackerFields
+  }
+}
+    fragment TrackerFields on Tracker {
+  id
+  name
+  kind
+  currency
+  monthlyBudget
+  role
+  isDefault
+  owner {
+    id
+    name
+    email
+  }
+  members {
+    role
+    addedAt
+    user {
+      id
+      name
+      email
+    }
+  }
+  createdAt
+}`) as unknown as TypedDocumentString<SetTrackerMemberRoleMutation, SetTrackerMemberRoleMutationVariables>;
+export const RemoveTrackerMemberDocument = new TypedDocumentString(`
+    mutation RemoveTrackerMember($id: ID!, $userId: ID!) {
+  removeTrackerMember(id: $id, userId: $userId) {
+    ...TrackerFields
+  }
+}
+    fragment TrackerFields on Tracker {
+  id
+  name
+  kind
+  currency
+  monthlyBudget
+  role
+  isDefault
+  owner {
+    id
+    name
+    email
+  }
+  members {
+    role
+    addedAt
+    user {
+      id
+      name
+      email
+    }
+  }
+  createdAt
+}`) as unknown as TypedDocumentString<RemoveTrackerMemberMutation, RemoveTrackerMemberMutationVariables>;
+export const LeaveTrackerDocument = new TypedDocumentString(`
+    mutation LeaveTracker($id: ID!) {
+  leaveTracker(id: $id)
+}
+    `) as unknown as TypedDocumentString<LeaveTrackerMutation, LeaveTrackerMutationVariables>;
+export const EmailReportsDocument = new TypedDocumentString(`
+    query EmailReports($trackerId: ID) {
+  emailReports(trackerId: $trackerId) {
+    ...ScheduleFields
+  }
+}
+    fragment ScheduleFields on EmailReportSchedule {
+  frequency
+  nextRunAt
+  lastSentAt
+  lastError
+}`) as unknown as TypedDocumentString<EmailReportsQuery, EmailReportsQueryVariables>;
+export const SetEmailReportsDocument = new TypedDocumentString(`
+    mutation SetEmailReports($trackerId: ID, $frequencies: [ReportFrequency!]!) {
+  setEmailReports(trackerId: $trackerId, frequencies: $frequencies) {
+    ...ScheduleFields
+  }
+}
+    fragment ScheduleFields on EmailReportSchedule {
+  frequency
+  nextRunAt
+  lastSentAt
+  lastError
+}`) as unknown as TypedDocumentString<SetEmailReportsMutation, SetEmailReportsMutationVariables>;
+export const SendReportEmailDocument = new TypedDocumentString(`
+    mutation SendReportEmail($trackerId: ID, $period: Period!) {
+  sendReportEmail(trackerId: $trackerId, period: $period)
+}
+    `) as unknown as TypedDocumentString<SendReportEmailMutation, SendReportEmailMutationVariables>;

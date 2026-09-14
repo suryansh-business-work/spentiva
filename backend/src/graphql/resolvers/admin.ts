@@ -1,5 +1,6 @@
 import { listOpenAiModels, testOpenAi } from '../../services/ai.js';
 import { getSetting, listSettings, setSettings } from '../../services/appSettings.js';
+import { sendTestEmail } from '../../services/email/index.js';
 import { listSlackChannels, postSlackMessage } from '../../services/slack.js';
 import { badInput, validate } from '../../utils/errors.js';
 import type { Context } from '../context.js';
@@ -11,7 +12,7 @@ async function slackToken() {
   return token;
 }
 
-/** App-wide environment settings (OpenAI, Slack) – admins only */
+/** App-wide environment settings (OpenAI, Slack, email) – admins only */
 export const adminResolvers = {
   Query: {
     envVars: async (_: unknown, __: unknown, ctx: Context) => {
@@ -48,5 +49,6 @@ export const adminResolvers = {
       await ctx.admin();
       return testOpenAi();
     },
+    testEmail: async (_: unknown, __: unknown, ctx: Context) => sendTestEmail(await ctx.admin()),
   },
 };

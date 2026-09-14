@@ -9,24 +9,24 @@ export const MeQuery = graphql(`
 `);
 
 export const CategoriesQuery = graphql(`
-  query Categories {
-    categories {
+  query Categories($trackerId: ID) {
+    categories(trackerId: $trackerId) {
       ...CategoryFields
     }
   }
 `);
 
 export const SourcesQuery = graphql(`
-  query Sources {
-    paymentSources {
+  query Sources($trackerId: ID) {
+    paymentSources(trackerId: $trackerId) {
       ...SourceFields
     }
   }
 `);
 
 export const DashboardQuery = graphql(`
-  query Dashboard($month: String) {
-    dashboard(month: $month) {
+  query Dashboard($trackerId: ID, $month: String) {
+    dashboard(trackerId: $trackerId, month: $month) {
       from
       to
       currency
@@ -61,16 +61,16 @@ export const DashboardQuery = graphql(`
 `);
 
 export const ReportQuery = graphql(`
-  query Report($input: ReportInput!) {
-    report(input: $input) {
+  query Report($trackerId: ID, $input: ReportInput!) {
+    report(trackerId: $trackerId, input: $input) {
       ...ReportFields
     }
   }
 `);
 
 export const TransactionsQuery = graphql(`
-  query Transactions($filter: TransactionFilter, $limit: Int, $offset: Int) {
-    transactions(filter: $filter, limit: $limit, offset: $offset) {
+  query Transactions($trackerId: ID, $filter: TransactionFilter, $limit: Int, $offset: Int) {
+    transactions(trackerId: $trackerId, filter: $filter, limit: $limit, offset: $offset) {
       items {
         ...TxFields
       }
@@ -89,8 +89,8 @@ export const TransactionQuery = graphql(`
 `);
 
 export const ChatHistoryQuery = graphql(`
-  query ChatHistory($limit: Int, $before: DateTime) {
-    chatHistory(limit: $limit, before: $before) {
+  query ChatHistory($trackerId: ID, $limit: Int, $before: DateTime) {
+    chatHistory(trackerId: $trackerId, limit: $limit, before: $before) {
       ...ChatFields
     }
   }

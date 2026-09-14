@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, Loading } from '@/components/ui';
 import { useCategoryMap, useTransactions } from '@/hooks/queries';
 import { useDebounced } from '@/hooks/useDebounced';
 import { useUser } from '@/lib/auth';
+import { canEdit, useTracker } from '@/lib/tracker';
 import { currentMonth, money } from '@/lib/format';
 import { runAsync } from '@/lib/log';
 import { C } from '@/theme/colors';
@@ -44,6 +45,7 @@ function ListFooter({ loading, total }: Readonly<{ loading: boolean; total: numb
 /** All transactions for a month, grouped by day, with search and type filter */
 export default function SpendingScreen() {
   const user = useUser();
+  const tracker = useTracker();
   // Month + type live in the URL so Home can deep-link (e.g. Income for this month)
   const params = useLocalSearchParams<{ type?: string; month?: string }>();
   const [defaultMonth] = useState(() => currentMonth(user.timezone));
@@ -74,7 +76,7 @@ export default function SpendingScreen() {
         stickySectionHeadersEnabled={false}
         contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={retry} tintColor={C.green} colors={[C.green]} />}
-        renderSectionHeader={({ section }) => <SectionHeader section={section} currency={user.currency} locale={user.locale} />}
+        renderSectionHeader={({ section }) => <SectionHeader section={section} currency={tracker.currency} locale={user.locale} />}
         renderItem={({ item }) => (
           <YStack backgroundColor={C.white} paddingHorizontal={14} borderRadius={18} marginTop={6} borderWidth={1} borderColor={C.line}>
             <TransactionRow
@@ -100,7 +102,16 @@ export default function SpendingScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['top']}>
-      <SpendingFilters user={user} month={month} onMonth={setMonth} type={type} onType={setType} search={search} onSearch={setSearch} />
+      <SpendingFilters
+        user={user}
+        month={month}
+        onMonth={setMonth}
+        type={type}
+        onType={setType}
+        search={search}
+        onSearch={setSearch}
+        canAdd={canEdit(tracker.role)}
+      />
       {content}
     </SafeAreaView>
   );

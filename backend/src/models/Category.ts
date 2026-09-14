@@ -5,7 +5,7 @@ const ExpenseOnSchema = new Schema({ name: { type: String, required: true, trim:
 
 const CategorySchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    trackerId: { type: Schema.Types.ObjectId, ref: 'Tracker', required: true },
     name: { type: String, required: true, trim: true },
     type: { type: String, enum: ['EXPENSE', 'INCOME'], required: true },
     icon: { type: String, default: 'other' },
@@ -15,7 +15,7 @@ const CategorySchema = new Schema(
   { timestamps: true },
 );
 
-CategorySchema.index({ userId: 1, type: 1, name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
+CategorySchema.index({ trackerId: 1, type: 1, name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
 
 export type CategoryDoc = HydratedDocument<InferSchemaType<typeof CategorySchema>>;
 export const Category = model('Category', CategorySchema);

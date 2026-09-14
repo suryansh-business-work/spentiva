@@ -1,4 +1,5 @@
 import type { IconType } from 'react-icons';
+import type { TrackerKind } from '@/lib/types';
 import {
   FiActivity,
   FiAward,
@@ -104,3 +105,5 @@ export const CATEGORY_ICON_KEYS = [
 export const SOURCE_ICON_KEYS = ['cash', 'upi', 'card', 'credit', 'bank', 'wallet', 'phone', 'other'];
 
 export const iconFor = (key?: string | null): IconType => (key && ICONS[key]) || FiMoreHorizontal;
+
+export const TRACKER_ICONS: Record<TrackerKind, IconType> = { PERSONAL: FiHome, BUSINESS: FiBriefcase };

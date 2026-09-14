@@ -2,16 +2,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { YStack } from 'tamagui';
-import { CurrencyField, TextField } from '@/components/form';
+import { ChipsField, CurrencyField, TextField } from '@/components/form';
 import { iconFor } from '@/components/icons';
 import { Btn, ErrorText, Segmented } from '@/components/ui';
 import { useSaveTransaction } from '@/hooks/mutations';
 import { useCategories, useSources } from '@/hooks/queries';
 import { TX_TYPE_OPTIONS } from '@/lib/constants';
 import { runAsync } from '@/lib/log';
+import { useTracker } from '@/lib/tracker';
 import type { Transaction, User } from '@/lib/types';
 import { AmountInput } from './parts/AmountInput';
-import { ChipsField } from './parts/ChipsField';
 import { DateField } from './parts/DateField';
 import { ExpenseOnField } from './parts/ExpenseOnField';
 import { fromTransaction, toTransactionInput, transactionDefaults, transactionSchema, type TransactionValues } from './transaction.types';
@@ -27,8 +27,9 @@ const COPY = {
   INCOME: { category: 'Income category', item: 'Received for', source: 'Received in', submit: 'Add income' },
 };
 
-/** Manual add / edit of an expense or income entry */
+/** Manual add / edit of an expense or income entry (in the active tracker) */
 export function TransactionForm({ user, existing, onDone }: Readonly<TransactionFormProps>) {
+  const tracker = useTracker();
   const { data: categories } = useCategories();
   const { data: sources } = useSources();
   const save = useSaveTransaction();
@@ -36,7 +37,7 @@ export function TransactionForm({ user, existing, onDone }: Readonly<Transaction
 
   const { control, handleSubmit, setValue, reset } = useForm<TransactionValues>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: transactionDefaults(user.currency, user.timezone, defaultSource),
+    defaultValues: transactionDefaults(tracker.currency, user.timezone, defaultSource),
   });
 
   useEffect(() => {

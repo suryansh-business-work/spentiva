@@ -6,7 +6,8 @@ import { FiTrash2 } from 'react-icons/fi';
 import { Text, XStack, YStack } from 'tamagui';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { Logo } from '@/components/Logo';
-import { ErrorState, ErrorText, IconButton, Loading, Muted, Tiny } from '@/components/ui';
+import { TrackerSwitcher } from '@/components/TrackerSwitcher';
+import { ErrorState, ErrorText, IconButton, Loading, Muted } from '@/components/ui';
 import { useCategoryMap, useChatHistory } from '@/hooks/queries';
 import { useChat } from '@/hooks/useChat';
 import { useUser } from '@/lib/auth';
@@ -40,11 +41,11 @@ function ChatHeader({ onClear }: Readonly<{ onClear?: () => void }>) {
   return (
     <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10} borderBottomWidth={1} borderColor={C.line}>
       <Logo size={36} showName={false} />
-      <YStack flex={1}>
+      <YStack flex={1} gap={4}>
         <Text fontSize={17} fontWeight="800" color={C.ink}>
           Spentiva AI
         </Text>
-        <Tiny>Log expenses · ask for reports</Tiny>
+        <TrackerSwitcher />
       </YStack>
       {onClear ? <IconButton icon={FiTrash2} plain onPress={onClear} label="Clear chat" /> : null}
     </XStack>

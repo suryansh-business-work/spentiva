@@ -33,6 +33,30 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
 
+  portal:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: portal
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - name: GraphQL codegen is up to date
+        run: |
+          npm run codegen
+          git diff --exit-code -- src/gql || (echo "::error::Run 'npm run codegen' in portal/ and commit src/gql" && exit 1)
+      - run: npx vite build
+        env:
+          VITE_API_URL: https://spentiva.exyconn.com/graphql
+
   mobile:
     runs-on: ubuntu-latest
     defaults:
